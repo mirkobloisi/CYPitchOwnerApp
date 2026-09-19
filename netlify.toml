@@ -1,0 +1,37 @@
+# Deployment config for the CYPitch Pitch Owner website.
+#
+# The app is the same Expo codebase as the phone app; `expo export` builds it
+# into a single-page site (app.json sets web.output = "single"), so it can be
+# hosted free on Netlify with no server.
+#
+# Single-page rather than per-route HTML is deliberate: this panel is entirely
+# behind a login, so pre-rendering pages buys nothing, and rendering routes in
+# Node breaks on any browser-only API (it crashed on AsyncStorage reaching for
+# window during startup).
+#
+# IMPORTANT: the two EXPO_PUBLIC_ variables below must also be set in the
+# Netlify dashboard under Site settings -> Environment variables. They are
+# baked into the build, so a deploy without them produces a site that cannot
+# reach Supabase.
+
+[build]
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Required for single-page output: every route is served by the one index.html
+# and resolved client-side, so a hard refresh on /agenda must not 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Basic hardening for a page that handles pitch owner logins.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

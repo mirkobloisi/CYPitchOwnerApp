@@ -1,0 +1,6 @@
+# Basic hardening for a page pitch owners log in to. Mirrors netlify.toml so
+# drag-and-drop deploys get the same protection as git-connected builds.
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

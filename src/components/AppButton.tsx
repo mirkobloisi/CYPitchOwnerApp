@@ -1,0 +1,205 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import React, { useMemo, useRef } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  GestureResponderEvent,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableOpacityProps,
+  View,
+} from 'react-native';
+
+import { AppColors } from '../theme/palettes';
+import { useAppTheme } from '../theme/ThemeContext';
+import { radius } from '../theme/layout';
+import { scaleFont } from '../theme/typography';
+
+type AppButtonVariant = 'primary' | 'outline' | 'ghost' | 'danger';
+
+type AppButtonProps = TouchableOpacityProps & {
+  title: string;
+  variant?: AppButtonVariant;
+  fullWidth?: boolean;
+  loading?: boolean;
+};
+
+export default function AppButton({
+  title,
+  variant = 'primary',
+  fullWidth = true,
+  disabled,
+  loading = false,
+  style,
+  onPressIn,
+  onPressOut,
+  ...props
+}: AppButtonProps) {
+  const { colors } = useAppTheme();
+  const { styles, variantStyles, textStyles, primaryGradient } = useMemo(
+    () => buildStyles(colors),
+    [colors]
+  );
+
+  const scale = useRef(new Animated.Value(1)).current;
+  const isDisabled = disabled || loading;
+
+  function animateTo(value: number) {
+    Animated.spring(scale, {
+      toValue: value,
+      speed: 32,
+      bounciness: 7,
+      useNativeDriver: true,
+    }).start();
+  }
+
+  function handlePressIn(event: GestureResponderEvent) {
+    if (!isDisabled) {
+      animateTo(0.955);
+    }
+
+    onPressIn?.(event);
+  }
+
+  function handlePressOut(event: GestureResponderEvent) {
+    if (!isDisabled) {
+      animateTo(1);
+    }
+
+    onPressOut?.(event);
+  }
+
+  const content = loading ? (
+    <ActivityIndicator color={variant === 'primary' ? colors.blackText : colors.greenLight} />
+  ) : (
+    <Text style={[styles.text, textStyles[variant], isDisabled && styles.disabledText]}>
+      {title}
+    </Text>
+  );
+
+  return (
+    <TouchableOpacity
+      activeOpacity={1}
+      disabled={isDisabled}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        styles.touchable,
+        fullWidth && styles.fullWidth,
+        isDisabled && styles.disabled,
+        style,
+      ]}
+      {...props}
+    >
+      <Animated.View
+        style={[
+          styles.animatedContainer,
+          variant === 'primary' && styles.primaryShadow,
+          variant === 'danger' && styles.dangerShadow,
+          {
+            transform: [{ scale }],
+          },
+        ]}
+      >
+        {variant === 'primary' ? (
+          <LinearGradient
+            colors={primaryGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.base}
+          >
+            {content}
+          </LinearGradient>
+        ) : (
+          <View style={[styles.base, variantStyles[variant]]}>{content}</View>
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
+function buildStyles(colors: AppColors) {
+  const primaryGradient = [colors.greenLight, colors.green, colors.greenDeep] as const;
+
+  const styles = StyleSheet.create({
+    touchable: {
+      borderRadius: radius.lg,
+    },
+    fullWidth: {
+      width: '100%',
+    },
+    disabled: {
+      opacity: 0.45,
+    },
+    animatedContainer: {
+      borderRadius: radius.lg,
+    },
+    primaryShadow: {
+      shadowColor: colors.greenLight,
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 4,
+    },
+    dangerShadow: {
+      shadowColor: colors.red,
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 3,
+    },
+    base: {
+      minHeight: 54,
+      borderRadius: radius.lg,
+      paddingHorizontal: 18,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    text: {
+      fontSize: scaleFont(16),
+      fontWeight: '900',
+      letterSpacing: -0.2,
+    },
+    disabledText: {
+      opacity: 0.8,
+    },
+  });
+
+  const variantStyles = StyleSheet.create({
+    primary: {
+      backgroundColor: colors.green,
+    },
+    outline: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.greenLight,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    danger: {
+      backgroundColor: colors.redSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 69, 58, 0.35)',
+    },
+  });
+
+  const textStyles = StyleSheet.create({
+    primary: {
+      color: colors.blackText,
+    },
+    outline: {
+      color: colors.greenLight,
+    },
+    ghost: {
+      color: colors.greenLight,
+    },
+    danger: {
+      color: colors.red,
+    },
+  });
+
+  return { styles, variantStyles, textStyles, primaryGradient };
+}
