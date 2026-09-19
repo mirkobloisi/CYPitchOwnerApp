@@ -30,7 +30,7 @@ export default function BookingDetailsScreen() {
 
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [reason, setReason] = useState('');
-  const [blockAfter, setBlockAfter] = useState(true);
+  const [blockAfter, setBlockAfter] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resultDialog, setResultDialog] = useState<{ title: string; message: string } | null>(null);
 
@@ -86,6 +86,11 @@ export default function BookingDetailsScreen() {
   async function handleCancel() {
     if (!match || !reason.trim()) {
       setErrorMessage(t('bookingDetails.errorReasonRequired'));
+      return;
+    }
+
+    if (blockAfter === null) {
+      setErrorMessage(t('bookingDetails.errorAfterCancellingRequired'));
       return;
     }
 
@@ -246,18 +251,18 @@ export default function BookingDetailsScreen() {
               <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>{t('bookingDetails.afterCancelling')}</Text>
               <View style={styles.choiceRow}>
                 <AnimatedPressable
-                  style={[styles.choiceChip, blockAfter && styles.choiceChipActive]}
+                  style={[styles.choiceChip, blockAfter === true && styles.choiceChipActive]}
                   onPress={() => setBlockAfter(true)}
                 >
-                  <Text style={[styles.choiceChipText, blockAfter && styles.choiceChipTextActive]}>
+                  <Text style={[styles.choiceChipText, blockAfter === true && styles.choiceChipTextActive]}>
                     {t('bookingDetails.blockThisSlot')}
                   </Text>
                 </AnimatedPressable>
                 <AnimatedPressable
-                  style={[styles.choiceChip, !blockAfter && styles.choiceChipActive]}
+                  style={[styles.choiceChip, blockAfter === false && styles.choiceChipActive]}
                   onPress={() => setBlockAfter(false)}
                 >
-                  <Text style={[styles.choiceChipText, !blockAfter && styles.choiceChipTextActive]}>
+                  <Text style={[styles.choiceChipText, blockAfter === false && styles.choiceChipTextActive]}>
                     {t('bookingDetails.makeAvailableAgain')}
                   </Text>
                 </AnimatedPressable>
