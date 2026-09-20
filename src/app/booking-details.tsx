@@ -10,7 +10,14 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import Screen from '../components/Screen';
 import StatusBadge from '../components/StatusBadge';
 import { useTranslation } from '../i18n/LanguageContext';
-import { cancelConfirmedMatchUrgency, cancelPendingMatch, MatchRow } from '../lib/pitchData';
+import {
+  cancelConfirmedMatchUrgency,
+  cancelPendingMatch,
+  CancellationRequestRow,
+  fetchLatestCancellationRequest,
+  MatchRow,
+  respondToCancellationRequest,
+} from '../lib/pitchData';
 import { supabase } from '../lib/supabase';
 import { AppColors } from '../theme/palettes';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -39,6 +46,12 @@ export default function BookingDetailsScreen() {
   const [isSubmittingUrgency, setIsSubmittingUrgency] = useState(false);
   const [urgencyErrorMessage, setUrgencyErrorMessage] = useState('');
 
+  const [cancellationRequest, setCancellationRequest] = useState<CancellationRequestRow | null>(null);
+  const [decisionMode, setDecisionMode] = useState<'approve' | 'deny' | null>(null);
+  const [decisionNote, setDecisionNote] = useState('');
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
+  const [decisionErrorMessage, setDecisionErrorMessage] = useState('');
+
   useEffect(() => {
     let isMounted = true;
 
@@ -56,13 +69,25 @@ export default function BookingDetailsScreen() {
 
       if (!isMounted) return;
 
+      const loadedMatch = (data as MatchRow | null) ?? null;
+
       if (error) {
         setErrorMessage(error.message);
       } else {
-        setMatch((data as MatchRow | null) ?? null);
+        setMatch(loadedMatch);
       }
 
       setIsLoading(false);
+
+      if (loadedMatch?.status === 'confirmed') {
+        try {
+          const request = await fetchLatestCancellationRequest(loadedMatch.id);
+          if (isMounted) setCancellationRequest(request?.status === 'pending' ? request : null);
+        } catch {
+          // Non-critical — the booking itself already loaded fine, so just
+          // leave the cancellation-request banner absent rather than error out.
+        }
+      }
     }
 
     load();
@@ -148,6 +173,52 @@ export default function BookingDetailsScreen() {
       setUrgencyErrorMessage(error instanceof Error ? error.message : t('bookingDetails.errorUrgencyCancel'));
     } finally {
       setIsSubmittingUrgency(false);
+    }
+  }
+
+  async function handleRespondToRequest() {
+    if (!cancellationRequest || !decisionMode) return;
+
+    if (!decisionNote.trim()) {
+      setDecisionErrorMessage(t('bookingDetails.cancellationRequestErrorNoteRequired'));
+      return;
+    }
+
+    setIsSubmittingDecision(true);
+    setDecisionErrorMessage('');
+
+    try {
+      const approve = decisionMode === 'approve';
+      const result = await respondToCancellationRequest(cancellationRequest.id, approve, decisionNote.trim());
+      setDecisionMode(null);
+      setCancellationRequest(null);
+
+      if (approve) {
+        if (result.clawbackRequired) {
+          setResultDialog({
+            title: t('bookingDetails.cancellationRequestApprovedTitleClawback'),
+            message: t('bookingDetails.cancellationRequestApprovedMessageClawback', {
+              amount: (result.clawbackAmount ?? 0).toFixed(2),
+            }),
+          });
+        } else {
+          setResultDialog({
+            title: t('bookingDetails.cancellationRequestApprovedTitleNoClawback'),
+            message: t('bookingDetails.cancellationRequestApprovedMessageNoClawback'),
+          });
+        }
+      } else {
+        setResultDialog({
+          title: t('bookingDetails.cancellationRequestDeniedTitle'),
+          message: t('bookingDetails.cancellationRequestDeniedMessage'),
+        });
+      }
+    } catch (error) {
+      setDecisionErrorMessage(
+        error instanceof Error ? error.message : t('bookingDetails.cancellationRequestErrorSubmit')
+      );
+    } finally {
+      setIsSubmittingDecision(false);
     }
   }
 
@@ -294,7 +365,90 @@ export default function BookingDetailsScreen() {
             <Text style={styles.errorText}>{errorMessage}</Text>
           ) : null}
 
-          {canUrgencyCancel && !showUrgencyForm ? (
+          {cancellationRequest && !decisionMode ? (
+            <View style={styles.cancelForm}>
+              <View style={styles.urgencyIntroRow}>
+                <Ionicons name="alert-circle-outline" size={16} color={colors.red} />
+                <Text style={styles.urgencyIntroText}>
+                  {t('bookingDetails.cancellationRequestBannerTitle')}
+                </Text>
+              </View>
+
+              <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>
+                {t('bookingDetails.cancellationRequestReasonLabel')}
+              </Text>
+              <Text style={styles.infoValue}>{cancellationRequest.reason}</Text>
+
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonHalf}>
+                  <AppButton
+                    title={t('bookingDetails.cancellationRequestDeny')}
+                    variant="outline"
+                    onPress={() => {
+                      setDecisionMode('deny');
+                      setDecisionNote('');
+                      setDecisionErrorMessage('');
+                    }}
+                  />
+                </View>
+                <View style={styles.buttonHalf}>
+                  <AppButton
+                    title={t('bookingDetails.cancellationRequestApprove')}
+                    variant="danger"
+                    onPress={() => {
+                      setDecisionMode('approve');
+                      setDecisionNote('');
+                      setDecisionErrorMessage('');
+                    }}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : null}
+
+          {cancellationRequest && decisionMode ? (
+            <View style={styles.cancelForm}>
+              <Text style={styles.fieldLabel}>{t('bookingDetails.cancellationRequestNoteLabel')}</Text>
+              <TextInput
+                value={decisionNote}
+                onChangeText={setDecisionNote}
+                placeholder={t(
+                  decisionMode === 'approve'
+                    ? 'bookingDetails.cancellationRequestNotePlaceholderApprove'
+                    : 'bookingDetails.cancellationRequestNotePlaceholderDeny'
+                )}
+                placeholderTextColor={colors.greyDark}
+                style={styles.input}
+                multiline
+              />
+
+              {decisionErrorMessage ? <Text style={styles.errorText}>{decisionErrorMessage}</Text> : null}
+
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonHalf}>
+                  <AppButton
+                    title={t('bookingDetails.back')}
+                    variant="outline"
+                    onPress={() => setDecisionMode(null)}
+                  />
+                </View>
+                <View style={styles.buttonHalf}>
+                  <AppButton
+                    title={
+                      decisionMode === 'approve'
+                        ? t('bookingDetails.cancellationRequestApprove')
+                        : t('bookingDetails.cancellationRequestDeny')
+                    }
+                    variant="danger"
+                    onPress={handleRespondToRequest}
+                    loading={isSubmittingDecision}
+                  />
+                </View>
+              </View>
+            </View>
+          ) : null}
+
+          {canUrgencyCancel && !cancellationRequest && !showUrgencyForm ? (
             <View style={styles.cancelSection}>
               <AppButton
                 title={t('bookingDetails.urgencyCancelButton')}

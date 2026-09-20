@@ -364,6 +364,23 @@ export const translations = {
       urgencyResultTitleClawback: 'Match cancelled — payout will be reclaimed',
       urgencyResultMessageClawback:
         'Players are being refunded in full. Your payout of €{amount} for this match had already been settled, so CYPitch will collect that amount back from you via SEPA.',
+      cancellationRequestBannerTitle: 'A player has requested cancellation',
+      cancellationRequestReasonLabel: "Player's reason",
+      cancellationRequestApprove: 'Approve & Cancel Match',
+      cancellationRequestDeny: 'Deny Request',
+      cancellationRequestNoteLabel: 'Your explanation',
+      cancellationRequestNotePlaceholderApprove: 'Explain the cancellation to the player...',
+      cancellationRequestNotePlaceholderDeny: 'Explain why the match will go ahead...',
+      cancellationRequestErrorNoteRequired: 'An explanation is required.',
+      cancellationRequestErrorSubmit: 'Could not submit your response.',
+      cancellationRequestApprovedTitleNoClawback: 'Request approved — match cancelled',
+      cancellationRequestApprovedMessageNoClawback:
+        "The player has been notified and refunded in full. Your payout for this match hadn't gone out yet, so nothing further is owed.",
+      cancellationRequestApprovedTitleClawback: 'Request approved — payout will be reclaimed',
+      cancellationRequestApprovedMessageClawback:
+        'The player has been notified and refunded in full. Your payout of €{amount} for this match had already been settled, so CYPitch will collect that amount back from you via SEPA.',
+      cancellationRequestDeniedTitle: 'Request denied',
+      cancellationRequestDeniedMessage: 'The player has been notified of your explanation. The match is still on.',
     },
     manageBlock: {
       manageBookingTitle: 'Manage Booking',
@@ -815,6 +832,23 @@ export const translations = {
       urgencyResultTitleClawback: 'Ο αγώνας ακυρώθηκε — η πληρωμή θα ανακτηθεί',
       urgencyResultMessageClawback:
         'Οι παίκτες επιστρέφονται πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η CYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
+      cancellationRequestBannerTitle: 'Ένας παίκτης ζήτησε ακύρωση',
+      cancellationRequestReasonLabel: 'Αιτία παίκτη',
+      cancellationRequestApprove: 'Έγκριση & Ακύρωση Αγώνα',
+      cancellationRequestDeny: 'Απόρριψη Αιτήματος',
+      cancellationRequestNoteLabel: 'Η εξήγησή σας',
+      cancellationRequestNotePlaceholderApprove: 'Εξηγήστε την ακύρωση στον παίκτη...',
+      cancellationRequestNotePlaceholderDeny: 'Εξηγήστε γιατί ο αγώνας θα συνεχιστεί...',
+      cancellationRequestErrorNoteRequired: 'Απαιτείται εξήγηση.',
+      cancellationRequestErrorSubmit: 'Δεν ήταν δυνατή η υποβολή της απάντησής σας.',
+      cancellationRequestApprovedTitleNoClawback: 'Το αίτημα εγκρίθηκε — ο αγώνας ακυρώθηκε',
+      cancellationRequestApprovedMessageNoClawback:
+        'Ο παίκτης ενημερώθηκε και επιστράφηκε πλήρως. Η πληρωμή σας για αυτόν τον αγώνα δεν είχε ακόμα καταβληθεί, οπότε δεν οφείλεται τίποτα άλλο.',
+      cancellationRequestApprovedTitleClawback: 'Το αίτημα εγκρίθηκε — η πληρωμή θα ανακτηθεί',
+      cancellationRequestApprovedMessageClawback:
+        'Ο παίκτης ενημερώθηκε και επιστράφηκε πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η CYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
+      cancellationRequestDeniedTitle: 'Το αίτημα απορρίφθηκε',
+      cancellationRequestDeniedMessage: 'Ο παίκτης ενημερώθηκε για την εξήγησή σας. Ο αγώνας παραμένει προγραμματισμένος.',
     },
     manageBlock: {
       manageBookingTitle: 'Διαχείριση Κράτησης',
@@ -1266,6 +1300,23 @@ export const translations = {
       urgencyResultTitleClawback: 'Матч отменён — выплата будет возвращена',
       urgencyResultMessageClawback:
         'Игрокам оформляется полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому CYPitch спишет эту сумму с вас через SEPA.',
+      cancellationRequestBannerTitle: 'Игрок запросил отмену',
+      cancellationRequestReasonLabel: 'Причина игрока',
+      cancellationRequestApprove: 'Одобрить и отменить матч',
+      cancellationRequestDeny: 'Отклонить запрос',
+      cancellationRequestNoteLabel: 'Ваше объяснение',
+      cancellationRequestNotePlaceholderApprove: 'Объясните игроку причину отмены...',
+      cancellationRequestNotePlaceholderDeny: 'Объясните, почему матч состоится...',
+      cancellationRequestErrorNoteRequired: 'Требуется объяснение.',
+      cancellationRequestErrorSubmit: 'Не удалось отправить ваш ответ.',
+      cancellationRequestApprovedTitleNoClawback: 'Запрос одобрен — матч отменён',
+      cancellationRequestApprovedMessageNoClawback:
+        'Игрок уведомлён и получит полный возврат. Ваша выплата за этот матч ещё не была произведена, поэтому больше ничего не причитается.',
+      cancellationRequestApprovedTitleClawback: 'Запрос одобрен — выплата будет возвращена',
+      cancellationRequestApprovedMessageClawback:
+        'Игрок уведомлён и получит полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому CYPitch спишет эту сумму с вас через SEPA.',
+      cancellationRequestDeniedTitle: 'Запрос отклонён',
+      cancellationRequestDeniedMessage: 'Игрок уведомлён о вашем объяснении. Матч по-прежнему состоится.',
     },
     manageBlock: {
       manageBookingTitle: 'Управление бронированием',

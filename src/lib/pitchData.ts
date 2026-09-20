@@ -364,6 +364,72 @@ export async function cancelConfirmedMatchUrgency(
   };
 }
 
+export type CancellationRequestRow = {
+  id: string;
+  match_id: string;
+  requested_by: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'denied';
+  owner_note: string | null;
+  created_at: string;
+};
+
+// A confirmed match can have at most one PENDING request at a time (enforced
+// server side), so this only ever needs the latest one for the badge/banner.
+export async function fetchLatestCancellationRequest(matchId: string): Promise<CancellationRequestRow | null> {
+  const { data, error } = await withAbortableTimeout(
+    supabase
+      .from('match_cancellation_requests')
+      .select('id, match_id, requested_by, reason, status, owner_note, created_at')
+      .eq('match_id', matchId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    REQUEST_TIMEOUT_MS,
+    'fetchLatestCancellationRequest'
+  );
+
+  if (error) throw error;
+  return (data as CancellationRequestRow | null) ?? null;
+}
+
+export type RespondToCancellationRequestResult = {
+  cancelled: boolean;
+  clawbackRequired: boolean;
+  clawbackAmount: number | null;
+};
+
+// approve: true cancels the match and refunds every player, exactly like
+// cancelConfirmedMatchUrgency above — see
+// owner_respond_to_cancellation_request_safe in the database. approve:
+// false just records the denial and notifies the requesting player with
+// ownerNote, leaving the match untouched.
+export async function respondToCancellationRequest(
+  requestId: string,
+  approve: boolean,
+  ownerNote: string
+): Promise<RespondToCancellationRequestResult> {
+  const { data, error } = await withAbortableTimeout(
+    supabase.rpc('owner_respond_to_cancellation_request_safe', {
+      request_id_input: requestId,
+      approve,
+      owner_note_input: ownerNote,
+    }),
+    REQUEST_TIMEOUT_MS,
+    'respondToCancellationRequest'
+  );
+
+  if (error) throw error;
+
+  const row = Array.isArray(data) ? data[0] : data;
+
+  return {
+    cancelled: Boolean(row?.cancelled),
+    clawbackRequired: Boolean(row?.clawback_required),
+    clawbackAmount: row?.clawback_amount != null ? Number(row.clawback_amount) : null,
+  };
+}
+
 // A day can hold several open periods (a morning and an afternoon shift, say).
 // Each row below is one such period; the gaps between them are unavailable.
 export async function createAvailabilityRange(input: {
