@@ -31,11 +31,6 @@ export default function ProfileScreen() {
   const [pickedAvatarImage, setPickedAvatarImage] = useState<PickedAvatarImage | null>(null);
   const [avatarErrorMessage, setAvatarErrorMessage] = useState('');
 
-  const avatarLetter = (pitchOwner?.contact_name || pitchOwner?.business_name || '?')
-    .trim()
-    .charAt(0)
-    .toUpperCase();
-
   function handleAvatarPicked(image: PickedAvatarImage) {
     setAvatarErrorMessage('');
     setPickedAvatarImage(image);
@@ -58,7 +53,7 @@ export default function ProfileScreen() {
 
       const { error } = await supabase
         .from('pitch_owners')
-        .update({ avatar_url: publicUrl })
+        .update({ logo_url: publicUrl })
         .eq('id', pitchOwner.id);
 
       if (error) throw error;
@@ -89,17 +84,19 @@ export default function ProfileScreen() {
     <Screen>
       <AppHeader title={t('profile.title')} showBack={false} />
 
-      <View style={styles.avatarSection}>
+      <View style={styles.heroCard}>
         <AvatarPickerTrigger
           disabled={!pitchOwner || isUploadingAvatar}
           onPicked={handleAvatarPicked}
           onError={handleAvatarPickError}
         >
           <View style={styles.avatar}>
-            {pitchOwner?.avatar_url ? (
-              <Image source={{ uri: pitchOwner.avatar_url }} style={styles.avatarImage} />
+            {pitchOwner?.logo_url ? (
+              <Image source={{ uri: pitchOwner.logo_url }} style={styles.heroLogo} resizeMode="cover" />
             ) : (
-              <Text style={styles.avatarText}>{avatarLetter}</Text>
+              <View style={styles.heroIcon}>
+                <Ionicons name="business-outline" size={26} color={colors.greenLight} />
+              </View>
             )}
 
             <View style={styles.avatarEditBadge}>
@@ -112,21 +109,11 @@ export default function ProfileScreen() {
           </View>
         </AvatarPickerTrigger>
 
-        {pitchOwner?.contact_name ? (
-          <Text style={styles.avatarName}>{pitchOwner.contact_name}</Text>
+        {pitchOwner?.business_name ? (
+          <Text style={styles.avatarName}>{pitchOwner.business_name}</Text>
         ) : null}
 
         {avatarErrorMessage ? <Text style={styles.avatarErrorText}>{avatarErrorMessage}</Text> : null}
-      </View>
-
-      <View style={styles.heroCard}>
-        {pitchOwner?.logo_url ? (
-          <Image source={{ uri: pitchOwner.logo_url }} style={styles.heroLogo} resizeMode="cover" />
-        ) : (
-          <View style={styles.heroIcon}>
-            <Ionicons name="business-outline" size={26} color={colors.greenLight} />
-          </View>
-        )}
       </View>
 
       <SectionHeader title={t('profile.appearance')} />
@@ -221,23 +208,12 @@ function LanguageChip({
 
 const makeStyles = (colors: AppColors) =>
   StyleSheet.create({
-    avatarSection: {
-      alignItems: 'center',
-      marginBottom: spacing.lg,
-    },
     avatar: {
-      width: 84,
-      height: 84,
-      borderRadius: radius.round,
-      backgroundColor: colors.greenLight,
+      width: 72,
+      height: 72,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'visible',
-    },
-    avatarImage: {
-      width: 84,
-      height: 84,
-      borderRadius: radius.round,
     },
     avatarEditBadge: {
       position: 'absolute',
@@ -251,11 +227,6 @@ const makeStyles = (colors: AppColors) =>
       borderColor: colors.background,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    avatarText: {
-      color: colors.blackText,
-      fontSize: 32,
-      fontWeight: '900',
     },
     avatarName: {
       color: colors.white,

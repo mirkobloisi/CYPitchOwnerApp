@@ -23,7 +23,6 @@ export type PitchOwnerRecord = {
   phone: string | null;
   address: string | null;
   logo_url: string | null;
-  avatar_url: string | null;
   status: 'pending' | 'active' | 'suspended' | 'rejected';
   created_at: string;
 };
@@ -124,9 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: ownerData, error: ownerError } = await withAbortableTimeout(
         supabase
           .from('pitch_owners')
-          .select(
-            'id, user_id, business_name, contact_name, email, phone, address, logo_url, avatar_url, status, created_at'
-          )
+          .select('id, user_id, business_name, contact_name, email, phone, address, logo_url, status, created_at')
           .eq('user_id', userId)
           .maybeSingle(),
         OWNER_DATA_QUERY_TIMEOUT_MS,
