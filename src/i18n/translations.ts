@@ -244,6 +244,13 @@ export const translations = {
       deleteAccountRequest: 'Request to delete my account',
       deleteEmailSubject: 'Account deletion request',
       deleteEmailBody: 'Please delete my MYPitch pitch owner account.',
+      avatarErrorTitle: "Couldn't update photo",
+      avatarErrorText: 'Something went wrong uploading your photo. Please try again.',
+    },
+    avatarCrop: {
+      title: 'Adjust your photo',
+      subtitle: 'Drag to reposition, pinch to zoom',
+      usePhoto: 'Use Photo',
     },
     addExternalBooking: {
       title: 'Add External Booking',
@@ -713,6 +720,13 @@ export const translations = {
       deleteAccountRequest: 'Αίτημα διαγραφής του λογαριασμού μου',
       deleteEmailSubject: 'Αίτημα διαγραφής λογαριασμού',
       deleteEmailBody: 'Παρακαλώ διαγράψτε τον λογαριασμό μου ως ιδιοκτήτη γηπέδου στην MYPitch.',
+      avatarErrorTitle: 'Δεν ήταν δυνατή η ενημέρωση της φωτογραφίας',
+      avatarErrorText: 'Κάτι πήγε στραβά κατά τη μεταφόρτωση της φωτογραφίας. Δοκιμάστε ξανά.',
+    },
+    avatarCrop: {
+      title: 'Προσαρμόστε τη φωτογραφία σας',
+      subtitle: 'Σύρετε για επανατοποθέτηση, τσιμπήστε για ζουμ',
+      usePhoto: 'Χρήση Φωτογραφίας',
     },
     addExternalBooking: {
       title: 'Προσθήκη Εξωτερικής Κράτησης',
@@ -1181,6 +1195,13 @@ export const translations = {
       deleteAccountRequest: 'Запросить удаление моей учётной записи',
       deleteEmailSubject: 'Запрос на удаление учётной записи',
       deleteEmailBody: 'Пожалуйста, удалите мою учётную запись владельца поля MYPitch.',
+      avatarErrorTitle: 'Не удалось обновить фото',
+      avatarErrorText: 'При загрузке фото что-то пошло не так. Попробуйте ещё раз.',
+    },
+    avatarCrop: {
+      title: 'Настройте фото',
+      subtitle: 'Перетащите, чтобы переместить, сведите пальцы, чтобы увеличить',
+      usePhoto: 'Использовать фото',
     },
     addExternalBooking: {
       title: 'Добавить внешнее бронирование',

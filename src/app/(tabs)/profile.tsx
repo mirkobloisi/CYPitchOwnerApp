@@ -1,13 +1,17 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useMemo, useState } from 'react';
-import { Image, Linking, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, StyleSheet, Switch, Text, View } from 'react-native';
 
 import AnimatedPressable from '../../components/AnimatedPressable';
 import AppButton from '../../components/AppButton';
 import AppHeader from '../../components/AppHeader';
+import AvatarCropModal from '../../components/AvatarCropModal';
+import AvatarPickerTrigger from '../../components/AvatarPickerTrigger';
 import Screen from '../../components/Screen';
 import SectionHeader from '../../components/SectionHeader';
 import { useAuth } from '../../lib/auth';
+import { cropAndUploadAvatar, PickedAvatarImage } from '../../lib/avatarUpload';
+import { supabase } from '../../lib/supabase';
 import { AppLanguage, LANGUAGE_OPTIONS, useLanguage } from '../../i18n/LanguageContext';
 import { AppColors } from '../../theme/palettes';
 import { useAppTheme } from '../../theme/ThemeContext';
@@ -19,10 +23,53 @@ const SUPPORT_WHATSAPP = 'https://wa.me/35700000000';
 
 export default function ProfileScreen() {
   const { colors, isDark, toggleScheme } = useAppTheme();
-  const { pitchOwner, signOut } = useAuth();
+  const { pitchOwner, refresh, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [pickedAvatarImage, setPickedAvatarImage] = useState<PickedAvatarImage | null>(null);
+  const [avatarErrorMessage, setAvatarErrorMessage] = useState('');
+
+  const avatarLetter = (pitchOwner?.contact_name || pitchOwner?.business_name || '?')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  function handleAvatarPicked(image: PickedAvatarImage) {
+    setAvatarErrorMessage('');
+    setPickedAvatarImage(image);
+  }
+
+  function handleAvatarPickError(error: unknown) {
+    setAvatarErrorMessage(error instanceof Error ? error.message : t('profile.avatarErrorText'));
+  }
+
+  async function handleCropConfirm(crop: { originX: number; originY: number; size: number }) {
+    if (!pitchOwner || !pickedAvatarImage) return;
+
+    const image = pickedAvatarImage;
+    setPickedAvatarImage(null);
+    setIsUploadingAvatar(true);
+    setAvatarErrorMessage('');
+
+    try {
+      const publicUrl = await cropAndUploadAvatar(pitchOwner.user_id, image, crop);
+
+      const { error } = await supabase
+        .from('pitch_owners')
+        .update({ avatar_url: publicUrl })
+        .eq('id', pitchOwner.id);
+
+      if (error) throw error;
+
+      await refresh();
+    } catch (error) {
+      setAvatarErrorMessage(error instanceof Error ? error.message : t('profile.avatarErrorText'));
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  }
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -41,6 +88,36 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <AppHeader title={t('profile.title')} showBack={false} />
+
+      <View style={styles.avatarSection}>
+        <AvatarPickerTrigger
+          disabled={!pitchOwner || isUploadingAvatar}
+          onPicked={handleAvatarPicked}
+          onError={handleAvatarPickError}
+        >
+          <View style={styles.avatar}>
+            {pitchOwner?.avatar_url ? (
+              <Image source={{ uri: pitchOwner.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{avatarLetter}</Text>
+            )}
+
+            <View style={styles.avatarEditBadge}>
+              {isUploadingAvatar ? (
+                <ActivityIndicator color={colors.blackText} size="small" />
+              ) : (
+                <Ionicons name="camera" size={13} color={colors.blackText} />
+              )}
+            </View>
+          </View>
+        </AvatarPickerTrigger>
+
+        {pitchOwner?.contact_name ? (
+          <Text style={styles.avatarName}>{pitchOwner.contact_name}</Text>
+        ) : null}
+
+        {avatarErrorMessage ? <Text style={styles.avatarErrorText}>{avatarErrorMessage}</Text> : null}
+      </View>
 
       <View style={styles.heroCard}>
         {pitchOwner?.logo_url ? (
@@ -105,6 +182,15 @@ export default function ProfileScreen() {
         <Ionicons name="trash-outline" size={16} color={colors.red} />
         <Text style={styles.deleteText}>{t('profile.deleteAccountRequest')}</Text>
       </AnimatedPressable>
+
+      <AvatarCropModal
+        visible={!!pickedAvatarImage}
+        imageUri={pickedAvatarImage?.uri ?? null}
+        imageWidth={pickedAvatarImage?.width ?? 0}
+        imageHeight={pickedAvatarImage?.height ?? 0}
+        onCancel={() => setPickedAvatarImage(null)}
+        onConfirm={handleCropConfirm}
+      />
     </Screen>
   );
 }
@@ -135,6 +221,55 @@ function LanguageChip({
 
 const makeStyles = (colors: AppColors) =>
   StyleSheet.create({
+    avatarSection: {
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    avatar: {
+      width: 84,
+      height: 84,
+      borderRadius: radius.round,
+      backgroundColor: colors.greenLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'visible',
+    },
+    avatarImage: {
+      width: 84,
+      height: 84,
+      borderRadius: radius.round,
+    },
+    avatarEditBadge: {
+      position: 'absolute',
+      right: -2,
+      bottom: -2,
+      width: 26,
+      height: 26,
+      borderRadius: radius.round,
+      backgroundColor: colors.greenLight,
+      borderWidth: 2,
+      borderColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      color: colors.blackText,
+      fontSize: 32,
+      fontWeight: '900',
+    },
+    avatarName: {
+      color: colors.white,
+      fontSize: scaleFont(14),
+      fontWeight: '800',
+      marginTop: spacing.sm,
+    },
+    avatarErrorText: {
+      color: colors.red,
+      fontSize: scaleFont(12.5),
+      fontWeight: '700',
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
     heroCard: {
       borderRadius: radius.xl,
       backgroundColor: colors.card,

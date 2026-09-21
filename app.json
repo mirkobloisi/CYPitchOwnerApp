@@ -33,6 +33,12 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MYPitch uses your photo library to let you set a profile picture."
+        }
       ]
     ],
     "experiments": {
