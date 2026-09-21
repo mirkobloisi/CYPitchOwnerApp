@@ -20,7 +20,7 @@ import { parseTimeToMinutes } from '../../lib/slots';
 import { AppColors } from '../../theme/palettes';
 import { useAppTheme } from '../../theme/ThemeContext';
 import { radius, spacing } from '../../theme/layout';
-import { scaleFont, scaleLine } from '../../theme/typography';
+import { scaleFont } from '../../theme/typography';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -371,11 +371,6 @@ export default function AvailabilityScreen() {
         <ActivityIndicator color={colors.greenLight} style={styles.loading} />
       ) : (
         <>
-          <View style={styles.hintCard}>
-            <Ionicons name="bulb-outline" size={16} color={colors.blueLight} />
-            <Text style={styles.hintText}>{t('availability.hint')}</Text>
-          </View>
-
           <SectionHeader title={t('availability.weeklyHours')} />
 
           {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -499,24 +494,6 @@ const makeStyles = (colors: AppColors) =>
     },
     loading: {
       marginTop: spacing.xxl,
-    },
-    hintCard: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      alignItems: 'flex-start',
-      backgroundColor: colors.blueSoft,
-      borderRadius: radius.md,
-      borderWidth: 1,
-      borderColor: colors.borderBlue,
-      padding: spacing.md,
-      marginBottom: spacing.md,
-    },
-    hintText: {
-      flex: 1,
-      color: colors.blueLight,
-      fontSize: scaleFont(12),
-      fontWeight: '600',
-      lineHeight: scaleLine(17),
     },
     errorText: {
       color: colors.red,

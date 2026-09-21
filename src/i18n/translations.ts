@@ -140,8 +140,6 @@ export const translations = {
       title: 'Availability',
       subtitle: 'Set your normal weekly opening hours.',
       noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
-      hint:
-        'A day can have more than one period. Opening 08:00–12:00 and 15:00–20:00 makes 12:00–15:00 permanently unavailable, without putting anything on your calendar. Type times as shorthand too — "21" or "930" both work, and are turned into 21:00 and 09:30 automatically.',
       weeklyHours: 'Weekly hours',
       days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       periodLabel: 'Period {index}',
@@ -614,8 +612,6 @@ export const translations = {
       subtitle: 'Ορίστε το κανονικό εβδομαδιαίο ωράριο λειτουργίας σας.',
       noPitchLinked:
         'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
-      hint:
-        'Μια ημέρα μπορεί να έχει περισσότερες από μία περιόδους. Το άνοιγμα 08:00–12:00 και 15:00–20:00 καθιστά το 12:00–15:00 μόνιμα μη διαθέσιμο, χωρίς να προσθέτει τίποτα στο ημερολόγιό σας. Μπορείτε επίσης να πληκτρολογήσετε σύντομα, π.χ. "21" ή "930", και μετατρέπονται αυτόματα σε 21:00 και 09:30.',
       weeklyHours: 'Εβδομαδιαίο ωράριο',
       days: ['Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο', 'Κυριακή'],
       periodLabel: 'Περίοδος {index}',
@@ -1089,8 +1085,6 @@ export const translations = {
       subtitle: 'Установите обычные часы работы по дням недели.',
       noPitchLinked:
         'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
-      hint:
-        'В один день можно задать несколько периодов. Открыв 08:00–12:00 и 15:00–20:00, вы делаете 12:00–15:00 постоянно недоступным, не добавляя ничего в календарь. Время можно вводить и сокращённо — например, "21" или "930" — они автоматически превратятся в 21:00 и 09:30.',
       weeklyHours: 'Часы работы по неделям',
       days: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
       periodLabel: 'Период {index}',

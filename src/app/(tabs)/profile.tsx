@@ -18,7 +18,7 @@ import { useAppTheme } from '../../theme/ThemeContext';
 import { radius, spacing } from '../../theme/layout';
 import { scaleFont } from '../../theme/typography';
 
-const SUPPORT_EMAIL = 'cypitch@protonmail.com';
+const SUPPORT_EMAIL = 'mypitch_help@protonmail.com';
 const SUPPORT_WHATSAPP = 'https://wa.me/35700000000';
 
 export default function ProfileScreen() {
