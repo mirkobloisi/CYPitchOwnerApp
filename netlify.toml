@@ -1,4 +1,4 @@
-# Deployment config for the CYPitch Pitch Owner website.
+# Deployment config for the MYPitch Pitch Owner website.
 #
 # The app is the same Expo codebase as the phone app; `expo export` builds it
 # into a single-page site (app.json sets web.output = "single"), so it can be

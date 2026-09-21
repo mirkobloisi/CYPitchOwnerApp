@@ -72,10 +72,10 @@ function NavBar({ children, isDesktop }: { children?: ReactNode; isDesktop: bool
     <View style={themed.sidebar}>
       <View style={themed.brandRow}>
         <Image
-          source={require('../../assets/images/cypitch-logo.png')}
+          source={require('../../assets/images/mypitch-logo.png')}
           style={themed.brandLogo}
           resizeMode="contain"
-          accessibilityLabel="CYPitch"
+          accessibilityLabel="MYPitch"
         />
         <Text style={themed.brandRole}>{t('login.subtitle')}</Text>
       </View>

@@ -1,4 +1,4 @@
-// Dark palette matches the CYPitch User App exactly, for a consistent brand look.
+// Dark palette matches the MYPitch User App exactly, for a consistent brand look.
 export const darkColors = {
   background: '#020706',
   backgroundSoft: '#06120F',

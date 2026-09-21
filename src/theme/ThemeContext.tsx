@@ -21,12 +21,12 @@ type ThemeContextValue = {
   toggleScheme: () => void;
 };
 
-const STORAGE_KEY = 'cypitchowner_theme_scheme';
+const STORAGE_KEY = 'mypitchowner_theme_scheme';
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Dark is CYPitch's original look, so it stays the default until a
+  // Dark is MYPitch's original look, so it stays the default until a
   // stored preference says otherwise.
   const [scheme, setSchemeState] = useState<ThemeScheme>('dark');
   const [isReady, setIsReady] = useState(false);

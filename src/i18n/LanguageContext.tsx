@@ -23,7 +23,7 @@ export const LANGUAGE_OPTIONS: { code: AppLanguage; label: string }[] = [
   { code: 'ru', label: 'Русский' },
 ];
 
-const STORAGE_KEY = 'cypitch_owner_language';
+const STORAGE_KEY = 'mypitch_owner_language';
 const DEFAULT_LANGUAGE: AppLanguage = 'en';
 
 type LanguageContextValue = {

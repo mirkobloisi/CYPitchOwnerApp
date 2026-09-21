@@ -21,7 +21,7 @@
  * session and stay signed in, exactly like the player app.
  */
 
-const REMEMBER_KEY = 'cypitch.rememberMe';
+const REMEMBER_KEY = 'mypitch.rememberMe';
 
 /** Supabase stores the session under `sb-<project-ref>-auth-token`. */
 const SUPABASE_KEY_PREFIX = 'sb-';
@@ -34,7 +34,7 @@ let sessionAvailable: boolean | null = null;
 
 function probe(store: Storage): boolean {
   try {
-    const key = '__cypitch_probe__';
+    const key = '__mypitch_probe__';
     store.setItem(key, '1');
     store.removeItem(key);
     return true;

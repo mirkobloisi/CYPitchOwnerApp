@@ -20,7 +20,7 @@ const STATUS_TONE: Record<PitchRecord['status'], 'green' | 'orange' | 'red'> = {
   archived: 'red',
 };
 
-// Mirrors CYPitchAdminApp's CANONICAL_FACILITIES list — matched by exact
+// Mirrors MYPitchAdminApp's CANONICAL_FACILITIES list — matched by exact
 // label (case-insensitive) so a service set by super admin shows the same
 // icon here. Anything else (a custom service) still shows, just without one.
 const CANONICAL_FACILITY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {

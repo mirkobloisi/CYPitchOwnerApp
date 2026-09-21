@@ -120,7 +120,7 @@ export async function fetchAvailability(pitchId: string) {
   return (data ?? []) as AvailabilityRow[];
 }
 
-// Bump this whenever the signed CYPitch Pitch Owner Agreement / Owner Terms &
+// Bump this whenever the signed MYPitch Pitch Owner Agreement / Owner Terms &
 // Conditions change materially (matches the "Owner Terms version" printed on
 // those documents). An owner whose latest acceptance is for an older version
 // is treated as not having accepted the current one — see acceptOwnerTerms
@@ -128,13 +128,13 @@ export async function fetchAvailability(pitchId: string) {
 export const CURRENT_OWNER_TERMS_VERSION = '1.0';
 
 // The exact wording of the in-app acceptance checkbox, verbatim from Clause
-// 14 of the signed CYPitch Owner Terms & Conditions. This is what actually
+// 14 of the signed MYPitch Owner Terms & Conditions. This is what actually
 // gets stored with each acceptance record (regardless of the owner's chosen
 // display language), so the audit trail always shows the one canonical
 // sentence that was legally agreed to for a given terms_version — never a
 // translated variant of it.
 export const OWNER_TERMS_CHECKBOX_TEXT_CANONICAL =
-  "I confirm that I am authorised to represent this sports facility/operator, and I accept CYPitch's Owner Terms & Conditions (version shown above) and the signed CYPitch Pitch Owner Agreement, including the rules on pricing, reservations, cancellations, refunds, payouts, agenda management, external-reservation responsibility, weather/safety alerts, and data protection.";
+  "I confirm that I am authorised to represent this sports facility/operator, and I accept MYPitch's Owner Terms & Conditions (version shown above) and the signed MYPitch Pitch Owner Agreement, including the rules on pricing, reservations, cancellations, refunds, payouts, agenda management, external-reservation responsibility, weather/safety alerts, and data protection.";
 
 export type OwnerTermsAcceptance = {
   termsVersion: string;

@@ -1,4 +1,4 @@
-# CYPitch Pitch Owner — Website Deployment
+# MYPitch Pitch Owner — Website Deployment
 
 The website is not a separate project. It is this same Expo app, exported for
 the browser, using the same Supabase database and the same pitch owner logins.
@@ -11,7 +11,7 @@ below if you haven't already deleted it).
 
 ## Before deploying: build the site
 
-In the `CYPitchOwnerApp` folder:
+In the `MYPitchOwnerApp` folder:
 
 ```
 npx expo export --platform web
@@ -32,7 +32,7 @@ a web build; it would be readable by anyone who visits the site.
 
 ## One-time setup: link the project to Vercel
 
-Do this once, from the `CYPitchOwnerApp` folder — **not** from inside `dist`
+Do this once, from the `MYPitchOwnerApp` folder — **not** from inside `dist`
 (that folder gets deleted and rebuilt every time you export, so anything
 stored inside it would be lost).
 
@@ -44,7 +44,7 @@ vercel link
 
 - `vercel login` opens your browser to sign in (or create a free account).
 - `vercel link` asks which team/scope and what to name the project — use
-  something like `cypitch-owner`. This writes a `.vercel` folder in the
+  something like `mypitch-owner`. This writes a `.vercel` folder in the
   project root that remembers which Vercel project this is. It's excluded
   from git and safe to leave in place.
 
@@ -72,10 +72,11 @@ instead of reusing the one you linked (if that happens, just pick **Search all
 projects** and select your project by name — it won't create a duplicate, but
 it's an extra step worth avoiding).
 
-The very first successful deploy will print your live URL, something like
-`https://cyp-itch-owner-app.vercel.app`. You can rename the project later from
-the Vercel dashboard (**Project → Settings → General → Project Name**) if you
-want a cleaner subdomain.
+The very first successful deploy will print your live URL — currently
+`https://mypitch-owner-app.vercel.app`. You can rename the project any time
+from the Vercel dashboard (**Project → Settings → General → Project Name**),
+but remember to update Supabase's URL Configuration (next section) to match
+whenever you do — a rename alone doesn't update that.
 
 ---
 
@@ -94,10 +95,10 @@ to it, or password reset links could resolve to a dead site.
 ## Removing the old Netlify site
 
 Now that the Owner app website lives on Vercel, you can take down the old
-`cypitch-owner.netlify.app` deployment:
+`mypitch-owner.netlify.app` deployment:
 
 1. Log into **app.netlify.com**.
-2. Open the **cypitch-owner** site.
+2. Open the **mypitch-owner** site.
 3. **Site configuration → General** → scroll to the **Danger zone**.
 4. **Delete this site** → confirm.
 
@@ -111,11 +112,11 @@ to the old address.
 ## Later: a custom domain
 
 The `.vercel.app` address is free forever and fine to launch with. If you
-later want `cypitch.com` or `owner.cypitch.com`:
+later want `mypitch.com` or `owner.mypitch.com`:
 
 - Genuinely free custom domains have largely disappeared since Freenom stopped
   issuing them. [EU.org](https://nic.eu.org/) still gives free domains that
-  never expire (`cypitch.eu.org`), but requests are reviewed by volunteers and
+  never expire (`mypitch.eu.org`), but requests are reviewed by volunteers and
   can take weeks.
 - A real domain costs roughly €10/year from Namecheap, Porkbun or Cloudflare
   Registrar.

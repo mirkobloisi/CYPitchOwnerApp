@@ -22,7 +22,7 @@ export const translations = {
       profile: 'Profile',
     },
     login: {
-      brand: 'CYPitch',
+      brand: 'MYPitch',
       subtitle: 'Pitch Owner',
       emailLabel: 'Email',
       emailPlaceholder: 'you@business.com',
@@ -30,13 +30,13 @@ export const translations = {
       loginButton: 'Log In',
       requestAccess: "Don't have an account? Request owner access",
       footerNote:
-        'New pitch owner requests are reviewed by CYPitch before you get access.',
+        'New pitch owner requests are reviewed by MYPitch before you get access.',
       rememberMe: 'Keep me signed in on this computer',
       errorEnterCredentials: 'Enter your email and password.',
     },
     signup: {
       heading: 'Become a Pitch Owner',
-      subtitle: 'Tell us about your business. CYPitch will review and approve your account.',
+      subtitle: 'Tell us about your business. MYPitch will review and approve your account.',
       businessNameLabel: 'Business name',
       businessNamePlaceholder: 'e.g. GoalZone Limassol',
       contactNameLabel: 'Contact name',
@@ -53,9 +53,9 @@ export const translations = {
       errorPasswordMatch: 'Passwords do not match.',
       successTitle: 'Request submitted',
       successText:
-        "Thanks! Your pitch owner request has been sent to CYPitch for review. You'll get access as soon as it's approved.",
+        "Thanks! Your pitch owner request has been sent to MYPitch for review. You'll get access as soon as it's approved.",
       successConfirmEmailText:
-        'Thanks! Please confirm your email first, then log in — your request will be waiting for CYPitch to review.',
+        'Thanks! Please confirm your email first, then log in — your request will be waiting for MYPitch to review.',
       backToLogin: 'Back to Login',
       rememberMe: 'Keep me signed in on this computer',
       footerNote: 'Already have an account? Use the Login screen instead.',
@@ -63,16 +63,16 @@ export const translations = {
     pending: {
       notOwnerTitle: 'Not a Pitch Owner account',
       notOwnerMessage:
-        'This account is not registered as a CYPitch pitch owner. If you believe this is a mistake, contact CYPitch support.',
+        'This account is not registered as a MYPitch pitch owner. If you believe this is a mistake, contact MYPitch support.',
       suspendedTitle: 'Account suspended',
       suspendedMessage:
-        'Your pitch owner account has been suspended. Contact CYPitch support for more information.',
+        'Your pitch owner account has been suspended. Contact MYPitch support for more information.',
       rejectedTitle: 'Request not approved',
       rejectedMessage:
-        'Your pitch owner request was not approved by CYPitch. Contact CYPitch support if you would like it looked at again.',
+        'Your pitch owner request was not approved by MYPitch. Contact MYPitch support if you would like it looked at again.',
       pendingTitle: 'Approval pending',
       pendingMessage:
-        'Your pitch owner account is being reviewed by CYPitch. You will get access as soon as it is approved.',
+        'Your pitch owner account is being reviewed by MYPitch. You will get access as soon as it is approved.',
       contactSupport: 'Contact Support',
       logOut: 'Log Out',
     },
@@ -80,20 +80,20 @@ export const translations = {
       title: 'Accept the Owner Terms',
       versionLabel: 'Owner Terms version {version} — effective 17 September 2026',
       intro:
-        'Before you can receive bookings, please review and accept the current CYPitch Owner Terms & Conditions. Here are the key points:',
+        'Before you can receive bookings, please review and accept the current MYPitch Owner Terms & Conditions. Here are the key points:',
       summaryPoints: [
-        'For as long as this version is in force, CYPitch does not charge you any fee to use the Owner Dashboard, the CYPitch website, or their features.',
-        'You set your own price per hour. Any CYPitch fee is added on top of what a User pays — it is never deducted from your payout.',
+        'For as long as this version is in force, MYPitch does not charge you any fee to use the Owner Dashboard, the MYPitch website, or their features.',
+        'You set your own price per hour. Any MYPitch fee is added on top of what a User pays — it is never deducted from your payout.',
         'For each confirmed match, you receive a payout equal to your own price for that booking.',
-        'If CYPitch expects severe weather or a safety risk, we may block the affected dates/times for new online bookings ourselves and try to email you — you can still take a direct booking yourself for that period.',
-        'If a confirmed match must be cancelled for exceptional reasons, affected Users are refunded; if your payout had already settled, CYPitch recovers that amount from your nominated payout account.',
+        'If MYPitch expects severe weather or a safety risk, we may block the affected dates/times for new online bookings ourselves and try to email you — you can still take a direct booking yourself for that period.',
+        'If a confirmed match must be cancelled for exceptional reasons, affected Users are refunded; if your payout had already settled, MYPitch recovers that amount from your nominated payout account.',
         'You are responsible for entering every external booking, block, or closure into your Owner Dashboard as soon as it is made.',
-        'If CYPitch changes these Terms in the future, the change only applies to you once you have been shown the new version and given fresh, explicit acceptance of it — simply continuing to use the Dashboard is not acceptance.',
+        'If MYPitch changes these Terms in the future, the change only applies to you once you have been shown the new version and given fresh, explicit acceptance of it — simply continuing to use the Dashboard is not acceptance.',
       ],
       fullDocsNote:
-        'The complete CYPitch Pitch Owner Agreement and Owner Terms & Conditions have been shared with you directly by CYPitch. This screen summarizes their key points.',
+        'The complete MYPitch Pitch Owner Agreement and Owner Terms & Conditions have been shared with you directly by MYPitch. This screen summarizes their key points.',
       checkboxText:
-        "I confirm that I am authorised to represent this sports facility/operator, and I accept CYPitch's Owner Terms & Conditions (version shown above) and the signed CYPitch Pitch Owner Agreement, including the rules on pricing, reservations, cancellations, refunds, payouts, agenda management, external-reservation responsibility, weather/safety alerts, and data protection.",
+        "I confirm that I am authorised to represent this sports facility/operator, and I accept MYPitch's Owner Terms & Conditions (version shown above) and the signed MYPitch Pitch Owner Agreement, including the rules on pricing, reservations, cancellations, refunds, payouts, agenda management, external-reservation responsibility, weather/safety alerts, and data protection.",
       acceptButton: 'I Accept',
       logOut: 'Log Out',
       errorMustCheck: 'Please check the box to confirm you accept the Owner Terms.',
@@ -102,7 +102,7 @@ export const translations = {
     agenda: {
       title: 'Agenda',
       subtitle: 'Manage your bookings and pitch schedule.',
-      noPitchLinked: 'No pitch is linked to your account yet. Contact CYPitch support to get set up.',
+      noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
       blockSlot: 'Block Slot',
       addExternalBooking: 'Add External Booking',
       pastHint: 'This day has already passed — pick today or a later date to add a booking.',
@@ -139,7 +139,7 @@ export const translations = {
     availability: {
       title: 'Availability',
       subtitle: 'Set your normal weekly opening hours.',
-      noPitchLinked: 'No pitch is linked to your account yet. Contact CYPitch support to get set up.',
+      noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
       hint:
         'A day can have more than one period. Opening 08:00–12:00 and 15:00–20:00 makes 12:00–15:00 permanently unavailable, without putting anything on your calendar. Type times as shorthand too — "21" or "930" both work, and are turned into 21:00 and 09:30 automatically.',
       weeklyHours: 'Weekly hours',
@@ -183,7 +183,7 @@ export const translations = {
       minutesSuffix: '{minutes} min',
       perHour: '€{price} / hour',
       noteText:
-        'Pitch details, photos and pricing can only be changed by CYPitch support — reach out from the Profile tab to request a change.',
+        'Pitch details, photos and pricing can only be changed by MYPitch support — reach out from the Profile tab to request a change.',
       manageBookingSettings: 'Manage Booking Settings',
       bookingSettingsSummaryLabel: 'Booking settings',
     },
@@ -209,7 +209,7 @@ export const translations = {
     stats: {
       title: 'Stats',
       subtitle: 'Across all your pitches, last 30 days vs. the 30 before.',
-      noPitchLinked: 'No pitch is linked to your account yet. Contact CYPitch support to get set up.',
+      noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
       revenue: 'Revenue',
       reservations: 'Reservations',
       confirmationRate: 'Confirmation rate',
@@ -223,7 +223,7 @@ export const translations = {
     transactions: {
       title: 'Transactions',
       subtitle: 'Payouts for confirmed matches on your pitch.',
-      noPitchLinked: 'No pitch is linked to your account yet. Contact CYPitch support to get set up.',
+      noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
       filterAll: 'All',
       filterPendingConfirmation: 'Pending confirmation',
       filterPaid: 'Paid',
@@ -238,12 +238,12 @@ export const translations = {
       darkModeSubtitle: 'Switch between light and dark appearance.',
       language: 'Language',
       support: 'Support',
-      emailSupport: 'Email CYPitch Support',
-      whatsapp: 'WhatsApp CYPitch',
+      emailSupport: 'Email MYPitch Support',
+      whatsapp: 'WhatsApp MYPitch',
       logOut: 'Log Out',
       deleteAccountRequest: 'Request to delete my account',
       deleteEmailSubject: 'Account deletion request',
-      deleteEmailBody: 'Please delete my CYPitch pitch owner account.',
+      deleteEmailBody: 'Please delete my MYPitch pitch owner account.',
     },
     addExternalBooking: {
       title: 'Add External Booking',
@@ -269,7 +269,7 @@ export const translations = {
       notesLabel: 'Notes (optional)',
       notesPlaceholder: 'Add any additional notes…',
       noticeText:
-        'This slot will be marked as an external booking and will no longer be available to CYPitch users.',
+        'This slot will be marked as an external booking and will no longer be available to MYPitch users.',
       addBooking: 'Add External Booking',
       addWeeklyBooking: 'Add Weekly Booking',
       pastMessage:
@@ -363,7 +363,7 @@ export const translations = {
         "Players are being refunded in full. Your payout for this match hadn't gone out yet, so nothing further is owed.",
       urgencyResultTitleClawback: 'Match cancelled — payout will be reclaimed',
       urgencyResultMessageClawback:
-        'Players are being refunded in full. Your payout of €{amount} for this match had already been settled, so CYPitch will collect that amount back from you via SEPA.',
+        'Players are being refunded in full. Your payout of €{amount} for this match had already been settled, so MYPitch will collect that amount back from you via SEPA.',
       cancellationRequestBannerTitle: 'A player has requested cancellation',
       cancellationRequestReasonLabel: "Player's reason",
       cancellationRequestApprove: 'Approve & Cancel Match',
@@ -378,7 +378,7 @@ export const translations = {
         "The player has been notified and refunded in full. Your payout for this match hadn't gone out yet, so nothing further is owed.",
       cancellationRequestApprovedTitleClawback: 'Request approved — payout will be reclaimed',
       cancellationRequestApprovedMessageClawback:
-        'The player has been notified and refunded in full. Your payout of €{amount} for this match had already been settled, so CYPitch will collect that amount back from you via SEPA.',
+        'The player has been notified and refunded in full. Your payout of €{amount} for this match had already been settled, so MYPitch will collect that amount back from you via SEPA.',
       cancellationRequestDeniedTitle: 'Request denied',
       cancellationRequestDeniedMessage: 'The player has been notified of your explanation. The match is still on.',
     },
@@ -436,7 +436,7 @@ export const translations = {
       removeBlockedSlot: 'Remove Blocked Slot',
       deleteDialogTitleExternal: 'Delete external booking?',
       deleteDialogTitleBlocked: 'Remove blocked slot?',
-      deleteDialogAvailableAgain: 'This slot will become available to CYPitch users again.',
+      deleteDialogAvailableAgain: 'This slot will become available to MYPitch users again.',
       deleteAction: 'Delete',
       keepIt: 'Keep it',
       justThisWeek: 'Just this week',
@@ -455,7 +455,7 @@ export const translations = {
       repeatsIndefinitely:
         'Repeats every {weekday} indefinitely. New weeks are added automatically, and it keeps going until you delete it.',
       skippedNoticeText:
-        'Any week already taken by a CYPitch match or another booking is skipped, and you will be told which ones.',
+        'Any week already taken by a MYPitch match or another booking is skipped, and you will be told which ones.',
       bookingCountOne: '{count} booking · last on {date}',
       bookingCountOther: '{count} bookings · last on {date}',
       errorEndDateFormat: 'Enter the end date as DD/MM/YYYY.',
@@ -487,7 +487,7 @@ export const translations = {
       profile: 'Προφίλ',
     },
     login: {
-      brand: 'CYPitch',
+      brand: 'MYPitch',
       subtitle: 'Ιδιοκτήτης Γηπέδου',
       emailLabel: 'Email',
       emailPlaceholder: 'you@business.com',
@@ -495,13 +495,13 @@ export const translations = {
       loginButton: 'Σύνδεση',
       requestAccess: 'Δεν έχετε λογαριασμό; Αίτηση πρόσβασης ιδιοκτήτη',
       footerNote:
-        'Τα νέα αιτήματα ιδιοκτητών γηπέδων ελέγχονται από την CYPitch πριν αποκτήσετε πρόσβαση.',
+        'Τα νέα αιτήματα ιδιοκτητών γηπέδων ελέγχονται από την MYPitch πριν αποκτήσετε πρόσβαση.',
       rememberMe: 'Να παραμείνω συνδεδεμένος σε αυτόν τον υπολογιστή',
       errorEnterCredentials: 'Συμπληρώστε το email και τον κωδικό πρόσβασής σας.',
     },
     signup: {
       heading: 'Γίνετε Ιδιοκτήτης Γηπέδου',
-      subtitle: 'Πείτε μας για την επιχείρησή σας. Η CYPitch θα ελέγξει και θα εγκρίνει τον λογαριασμό σας.',
+      subtitle: 'Πείτε μας για την επιχείρησή σας. Η MYPitch θα ελέγξει και θα εγκρίνει τον λογαριασμό σας.',
       businessNameLabel: 'Επωνυμία επιχείρησης',
       businessNamePlaceholder: 'π.χ. GoalZone Λεμεσός',
       contactNameLabel: 'Όνομα επικοινωνίας',
@@ -518,9 +518,9 @@ export const translations = {
       errorPasswordMatch: 'Οι κωδικοί πρόσβασης δεν ταιριάζουν.',
       successTitle: 'Το αίτημα υποβλήθηκε',
       successText:
-        'Ευχαριστούμε! Το αίτημά σας ως ιδιοκτήτης γηπέδου στάλθηκε στην CYPitch για έλεγχο. Θα αποκτήσετε πρόσβαση μόλις εγκριθεί.',
+        'Ευχαριστούμε! Το αίτημά σας ως ιδιοκτήτης γηπέδου στάλθηκε στην MYPitch για έλεγχο. Θα αποκτήσετε πρόσβαση μόλις εγκριθεί.',
       successConfirmEmailText:
-        'Ευχαριστούμε! Επιβεβαιώστε πρώτα το email σας και μετά συνδεθείτε — το αίτημά σας θα περιμένει τον έλεγχο της CYPitch.',
+        'Ευχαριστούμε! Επιβεβαιώστε πρώτα το email σας και μετά συνδεθείτε — το αίτημά σας θα περιμένει τον έλεγχο της MYPitch.',
       backToLogin: 'Πίσω στη Σύνδεση',
       rememberMe: 'Να παραμείνω συνδεδεμένος σε αυτόν τον υπολογιστή',
       footerNote: 'Έχετε ήδη λογαριασμό; Χρησιμοποιήστε την οθόνη Σύνδεσης.',
@@ -528,16 +528,16 @@ export const translations = {
     pending: {
       notOwnerTitle: 'Δεν είναι λογαριασμός Ιδιοκτήτη Γηπέδου',
       notOwnerMessage:
-        'Αυτός ο λογαριασμός δεν είναι καταχωρημένος ως ιδιοκτήτης γηπέδου στην CYPitch. Αν πιστεύετε ότι πρόκειται για λάθος, επικοινωνήστε με την υποστήριξη της CYPitch.',
+        'Αυτός ο λογαριασμός δεν είναι καταχωρημένος ως ιδιοκτήτης γηπέδου στην MYPitch. Αν πιστεύετε ότι πρόκειται για λάθος, επικοινωνήστε με την υποστήριξη της MYPitch.',
       suspendedTitle: 'Ο λογαριασμός έχει ανασταλεί',
       suspendedMessage:
-        'Ο λογαριασμός σας ως ιδιοκτήτη γηπέδου έχει ανασταλεί. Επικοινωνήστε με την υποστήριξη της CYPitch για περισσότερες πληροφορίες.',
+        'Ο λογαριασμός σας ως ιδιοκτήτη γηπέδου έχει ανασταλεί. Επικοινωνήστε με την υποστήριξη της MYPitch για περισσότερες πληροφορίες.',
       rejectedTitle: 'Το αίτημα δεν εγκρίθηκε',
       rejectedMessage:
-        'Το αίτημά σας ως ιδιοκτήτη γηπέδου δεν εγκρίθηκε από την CYPitch. Επικοινωνήστε με την υποστήριξη της CYPitch αν θέλετε να επανεξεταστεί.',
+        'Το αίτημά σας ως ιδιοκτήτη γηπέδου δεν εγκρίθηκε από την MYPitch. Επικοινωνήστε με την υποστήριξη της MYPitch αν θέλετε να επανεξεταστεί.',
       pendingTitle: 'Εκκρεμεί έγκριση',
       pendingMessage:
-        'Ο λογαριασμός σας ως ιδιοκτήτη γηπέδου εξετάζεται από την CYPitch. Θα αποκτήσετε πρόσβαση μόλις εγκριθεί.',
+        'Ο λογαριασμός σας ως ιδιοκτήτη γηπέδου εξετάζεται από την MYPitch. Θα αποκτήσετε πρόσβαση μόλις εγκριθεί.',
       contactSupport: 'Επικοινωνία με Υποστήριξη',
       logOut: 'Αποσύνδεση',
     },
@@ -545,20 +545,20 @@ export const translations = {
       title: 'Αποδοχή των Όρων Ιδιοκτήτη',
       versionLabel: 'Όροι Ιδιοκτήτη έκδοση {version} — ισχύει από 17 Σεπτεμβρίου 2026',
       intro:
-        'Πριν μπορέσετε να λαμβάνετε κρατήσεις, ελέγξτε και αποδεχθείτε τους ισχύοντες Όρους και Προϋποθέσεις Ιδιοκτήτη CYPitch. Ακολουθούν τα βασικά σημεία:',
+        'Πριν μπορέσετε να λαμβάνετε κρατήσεις, ελέγξτε και αποδεχθείτε τους ισχύοντες Όρους και Προϋποθέσεις Ιδιοκτήτη MYPitch. Ακολουθούν τα βασικά σημεία:',
       summaryPoints: [
-        'Για όσο διάστημα ισχύει η παρούσα έκδοση, η CYPitch δεν σας χρεώνει κανένα τέλος για τη χρήση του Πίνακα Ελέγχου Ιδιοκτήτη, της ιστοσελίδας CYPitch, ή των λειτουργιών τους.',
-        'Ορίζετε τη δική σας τιμή ανά ώρα. Κάθε τέλος της CYPitch προστίθεται επιπλέον της τιμής σας όταν πληρώνει ένας Χρήστης — δεν αφαιρείται ποτέ από την απόδοσή σας.',
+        'Για όσο διάστημα ισχύει η παρούσα έκδοση, η MYPitch δεν σας χρεώνει κανένα τέλος για τη χρήση του Πίνακα Ελέγχου Ιδιοκτήτη, της ιστοσελίδας MYPitch, ή των λειτουργιών τους.',
+        'Ορίζετε τη δική σας τιμή ανά ώρα. Κάθε τέλος της MYPitch προστίθεται επιπλέον της τιμής σας όταν πληρώνει ένας Χρήστης — δεν αφαιρείται ποτέ από την απόδοσή σας.',
         'Για κάθε επιβεβαιωμένο αγώνα, λαμβάνετε απόδοση ίση με τη δική σας τιμή για αυτή την κράτηση.',
-        'Εάν η CYPitch αναμένει ακραία καιρικά φαινόμενα ή κίνδυνο ασφαλείας, μπορεί να μπλοκάρει η ίδια τις επηρεαζόμενες ημερομηνίες/ώρες για νέες κρατήσεις μέσω της εφαρμογής και να προσπαθήσει να σας ενημερώσει με email — μπορείτε ακόμα να δεχθείτε απευθείας κράτηση εσείς οι ίδιοι για την περίοδο αυτή.',
-        'Εάν ένας επιβεβαιωμένος αγώνας πρέπει να ακυρωθεί για έκτακτους λόγους, οι θιγόμενοι Χρήστες λαμβάνουν επιστροφή χρημάτων· εάν η απόδοσή σας είχε ήδη διακανονιστεί, η CYPitch ανακτά το ποσό αυτό από τον δηλωμένο λογαριασμό απόδοσής σας.',
+        'Εάν η MYPitch αναμένει ακραία καιρικά φαινόμενα ή κίνδυνο ασφαλείας, μπορεί να μπλοκάρει η ίδια τις επηρεαζόμενες ημερομηνίες/ώρες για νέες κρατήσεις μέσω της εφαρμογής και να προσπαθήσει να σας ενημερώσει με email — μπορείτε ακόμα να δεχθείτε απευθείας κράτηση εσείς οι ίδιοι για την περίοδο αυτή.',
+        'Εάν ένας επιβεβαιωμένος αγώνας πρέπει να ακυρωθεί για έκτακτους λόγους, οι θιγόμενοι Χρήστες λαμβάνουν επιστροφή χρημάτων· εάν η απόδοσή σας είχε ήδη διακανονιστεί, η MYPitch ανακτά το ποσό αυτό από τον δηλωμένο λογαριασμό απόδοσής σας.',
         'Είστε υπεύθυνος/η να καταχωρείτε κάθε εξωτερική κράτηση, μπλοκάρισμα ή κλείσιμο στον Πίνακα Ελέγχου Ιδιοκτήτη μόλις πραγματοποιηθεί.',
-        'Εάν η CYPitch αλλάξει αυτούς τους Όρους στο μέλλον, η αλλαγή θα ισχύσει για εσάς μόνο αφού σας παρουσιαστεί η νέα έκδοση και δώσετε νέα, ρητή αποδοχή της — η απλή συνέχιση χρήσης του Πίνακα Ελέγχου δεν αποτελεί αποδοχή.',
+        'Εάν η MYPitch αλλάξει αυτούς τους Όρους στο μέλλον, η αλλαγή θα ισχύσει για εσάς μόνο αφού σας παρουσιαστεί η νέα έκδοση και δώσετε νέα, ρητή αποδοχή της — η απλή συνέχιση χρήσης του Πίνακα Ελέγχου δεν αποτελεί αποδοχή.',
       ],
       fullDocsNote:
-        'Η πλήρης Συμφωνία Ιδιοκτήτη Γηπέδου CYPitch και οι Όροι και Προϋποθέσεις Ιδιοκτήτη έχουν κοινοποιηθεί απευθείας σε εσάς από την CYPitch. Αυτή η οθόνη συνοψίζει τα βασικά τους σημεία.',
+        'Η πλήρης Συμφωνία Ιδιοκτήτη Γηπέδου MYPitch και οι Όροι και Προϋποθέσεις Ιδιοκτήτη έχουν κοινοποιηθεί απευθείας σε εσάς από την MYPitch. Αυτή η οθόνη συνοψίζει τα βασικά τους σημεία.',
       checkboxText:
-        'Επιβεβαιώνω ότι είμαι εξουσιοδοτημένος/η να εκπροσωπώ αυτή την αθλητική εγκατάσταση/φορέα, και αποδέχομαι τους Όρους και Προϋποθέσεις Ιδιοκτήτη CYPitch (η ανωτέρω εκδοχή) και την υπογεγραμμένη Συμφωνία Ιδιοκτήτη Γηπέδου CYPitch, συμπεριλαμβανομένων των κανόνων για τιμολόγηση, κρατήσεις, ακυρώσεις, επιστροφές χρημάτων, αποδόσεις, διαχείριση ημερολογίου, ευθύνη εξωτερικών κρατήσεων, ειδοποιήσεις καιρού/ασφάλειας, και προστασία δεδομένων.',
+        'Επιβεβαιώνω ότι είμαι εξουσιοδοτημένος/η να εκπροσωπώ αυτή την αθλητική εγκατάσταση/φορέα, και αποδέχομαι τους Όρους και Προϋποθέσεις Ιδιοκτήτη MYPitch (η ανωτέρω εκδοχή) και την υπογεγραμμένη Συμφωνία Ιδιοκτήτη Γηπέδου MYPitch, συμπεριλαμβανομένων των κανόνων για τιμολόγηση, κρατήσεις, ακυρώσεις, επιστροφές χρημάτων, αποδόσεις, διαχείριση ημερολογίου, ευθύνη εξωτερικών κρατήσεων, ειδοποιήσεις καιρού/ασφάλειας, και προστασία δεδομένων.',
       acceptButton: 'Αποδέχομαι',
       logOut: 'Αποσύνδεση',
       errorMustCheck: 'Παρακαλώ επιλέξτε το κουτί για να επιβεβαιώσετε ότι αποδέχεστε τους Όρους Ιδιοκτήτη.',
@@ -568,7 +568,7 @@ export const translations = {
       title: 'Ατζέντα',
       subtitle: 'Διαχειριστείτε τις κρατήσεις και το πρόγραμμα του γηπέδου σας.',
       noPitchLinked:
-        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της CYPitch για να ρυθμιστεί.',
+        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
       blockSlot: 'Αποκλεισμός Ώρας',
       addExternalBooking: 'Προσθήκη Εξωτερικής Κράτησης',
       pastHint: 'Αυτή η ημέρα έχει ήδη περάσει — επιλέξτε σήμερα ή μεταγενέστερη ημερομηνία για να προσθέσετε κράτηση.',
@@ -606,7 +606,7 @@ export const translations = {
       title: 'Διαθεσιμότητα',
       subtitle: 'Ορίστε το κανονικό εβδομαδιαίο ωράριο λειτουργίας σας.',
       noPitchLinked:
-        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της CYPitch για να ρυθμιστεί.',
+        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
       hint:
         'Μια ημέρα μπορεί να έχει περισσότερες από μία περιόδους. Το άνοιγμα 08:00–12:00 και 15:00–20:00 καθιστά το 12:00–15:00 μόνιμα μη διαθέσιμο, χωρίς να προσθέτει τίποτα στο ημερολόγιό σας. Μπορείτε επίσης να πληκτρολογήσετε σύντομα, π.χ. "21" ή "930", και μετατρέπονται αυτόματα σε 21:00 και 09:30.',
       weeklyHours: 'Εβδομαδιαίο ωράριο',
@@ -650,7 +650,7 @@ export const translations = {
       minutesSuffix: '{minutes} λεπτά',
       perHour: '€{price} / ώρα',
       noteText:
-        'Τα στοιχεία, οι φωτογραφίες και οι τιμές του γηπέδου μπορούν να αλλάξουν μόνο από την υποστήριξη της CYPitch — επικοινωνήστε από την καρτέλα Προφίλ για να ζητήσετε αλλαγή.',
+        'Τα στοιχεία, οι φωτογραφίες και οι τιμές του γηπέδου μπορούν να αλλάξουν μόνο από την υποστήριξη της MYPitch — επικοινωνήστε από την καρτέλα Προφίλ για να ζητήσετε αλλαγή.',
       manageBookingSettings: 'Διαχείριση Ρυθμίσεων Κράτησης',
       bookingSettingsSummaryLabel: 'Ρυθμίσεις κράτησης',
     },
@@ -677,7 +677,7 @@ export const translations = {
       title: 'Στατιστικά',
       subtitle: 'Σε όλα τα γήπεδά σας, τις τελευταίες 30 ημέρες σε σχέση με τις προηγούμενες 30.',
       noPitchLinked:
-        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της CYPitch για να ρυθμιστεί.',
+        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
       revenue: 'Έσοδα',
       reservations: 'Κρατήσεις',
       confirmationRate: 'Ποσοστό επιβεβαίωσης',
@@ -692,7 +692,7 @@ export const translations = {
       title: 'Συναλλαγές',
       subtitle: 'Πληρωμές για επιβεβαιωμένους αγώνες στο γήπεδό σας.',
       noPitchLinked:
-        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της CYPitch για να ρυθμιστεί.',
+        'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
       filterAll: 'Όλα',
       filterPendingConfirmation: 'Εκκρεμεί επιβεβαίωση',
       filterPaid: 'Πληρωμένο',
@@ -707,12 +707,12 @@ export const translations = {
       darkModeSubtitle: 'Εναλλαγή μεταξύ ανοιχτής και σκοτεινής εμφάνισης.',
       language: 'Γλώσσα',
       support: 'Υποστήριξη',
-      emailSupport: 'Αποστολή email στην Υποστήριξη CYPitch',
-      whatsapp: 'WhatsApp προς CYPitch',
+      emailSupport: 'Αποστολή email στην Υποστήριξη MYPitch',
+      whatsapp: 'WhatsApp προς MYPitch',
       logOut: 'Αποσύνδεση',
       deleteAccountRequest: 'Αίτημα διαγραφής του λογαριασμού μου',
       deleteEmailSubject: 'Αίτημα διαγραφής λογαριασμού',
-      deleteEmailBody: 'Παρακαλώ διαγράψτε τον λογαριασμό μου ως ιδιοκτήτη γηπέδου στην CYPitch.',
+      deleteEmailBody: 'Παρακαλώ διαγράψτε τον λογαριασμό μου ως ιδιοκτήτη γηπέδου στην MYPitch.',
     },
     addExternalBooking: {
       title: 'Προσθήκη Εξωτερικής Κράτησης',
@@ -738,7 +738,7 @@ export const translations = {
       notesLabel: 'Σημειώσεις (προαιρετικό)',
       notesPlaceholder: 'Προσθέστε τυχόν επιπλέον σημειώσεις…',
       noticeText:
-        'Αυτή η ώρα θα σημειωθεί ως εξωτερική κράτηση και δεν θα είναι πλέον διαθέσιμη σε χρήστες της CYPitch.',
+        'Αυτή η ώρα θα σημειωθεί ως εξωτερική κράτηση και δεν θα είναι πλέον διαθέσιμη σε χρήστες της MYPitch.',
       addBooking: 'Προσθήκη Εξωτερικής Κράτησης',
       addWeeklyBooking: 'Προσθήκη Εβδομαδιαίας Κράτησης',
       pastMessage: 'Η {date} έχει ήδη περάσει. Κρατήσεις μπορούν να προστεθούν μόνο για σήμερα ή μελλοντική ημερομηνία.',
@@ -831,7 +831,7 @@ export const translations = {
         'Οι παίκτες επιστρέφονται πλήρως. Η πληρωμή σας για αυτόν τον αγώνα δεν είχε ακόμα καταβληθεί, οπότε δεν οφείλεται τίποτα άλλο.',
       urgencyResultTitleClawback: 'Ο αγώνας ακυρώθηκε — η πληρωμή θα ανακτηθεί',
       urgencyResultMessageClawback:
-        'Οι παίκτες επιστρέφονται πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η CYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
+        'Οι παίκτες επιστρέφονται πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η MYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
       cancellationRequestBannerTitle: 'Ένας παίκτης ζήτησε ακύρωση',
       cancellationRequestReasonLabel: 'Αιτία παίκτη',
       cancellationRequestApprove: 'Έγκριση & Ακύρωση Αγώνα',
@@ -846,7 +846,7 @@ export const translations = {
         'Ο παίκτης ενημερώθηκε και επιστράφηκε πλήρως. Η πληρωμή σας για αυτόν τον αγώνα δεν είχε ακόμα καταβληθεί, οπότε δεν οφείλεται τίποτα άλλο.',
       cancellationRequestApprovedTitleClawback: 'Το αίτημα εγκρίθηκε — η πληρωμή θα ανακτηθεί',
       cancellationRequestApprovedMessageClawback:
-        'Ο παίκτης ενημερώθηκε και επιστράφηκε πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η CYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
+        'Ο παίκτης ενημερώθηκε και επιστράφηκε πλήρως. Η πληρωμή σας των €{amount} για αυτόν τον αγώνα είχε ήδη διακανονιστεί, οπότε η MYPitch θα ανακτήσει αυτό το ποσό από εσάς μέσω SEPA.',
       cancellationRequestDeniedTitle: 'Το αίτημα απορρίφθηκε',
       cancellationRequestDeniedMessage: 'Ο παίκτης ενημερώθηκε για την εξήγησή σας. Ο αγώνας παραμένει προγραμματισμένος.',
     },
@@ -904,7 +904,7 @@ export const translations = {
       removeBlockedSlot: 'Αφαίρεση Αποκλεισμένης Ώρας',
       deleteDialogTitleExternal: 'Διαγραφή εξωτερικής κράτησης;',
       deleteDialogTitleBlocked: 'Αφαίρεση αποκλεισμένης ώρας;',
-      deleteDialogAvailableAgain: 'Αυτή η ώρα θα καταστεί ξανά διαθέσιμη σε χρήστες της CYPitch.',
+      deleteDialogAvailableAgain: 'Αυτή η ώρα θα καταστεί ξανά διαθέσιμη σε χρήστες της MYPitch.',
       deleteAction: 'Διαγραφή',
       keepIt: 'Διατήρηση',
       justThisWeek: 'Μόνο αυτή την εβδομάδα',
@@ -923,7 +923,7 @@ export const translations = {
       repeatsIndefinitely:
         'Επαναλαμβάνεται κάθε {weekday} επ\' αόριστον. Νέες εβδομάδες προστίθενται αυτόματα και συνεχίζεται μέχρι να το διαγράψετε.',
       skippedNoticeText:
-        'Κάθε εβδομάδα που είναι ήδη κατειλημμένη από αγώνα ή άλλη κράτηση της CYPitch παραλείπεται, και θα ενημερωθείτε ποιες.',
+        'Κάθε εβδομάδα που είναι ήδη κατειλημμένη από αγώνα ή άλλη κράτηση της MYPitch παραλείπεται, και θα ενημερωθείτε ποιες.',
       bookingCountOne: '{count} κράτηση · τελευταία στις {date}',
       bookingCountOther: '{count} κρατήσεις · τελευταία στις {date}',
       errorEndDateFormat: 'Εισαγάγετε την ημερομηνία λήξης ως ΗΗ/ΜΜ/ΕΕΕΕ.',
@@ -955,7 +955,7 @@ export const translations = {
       profile: 'Профиль',
     },
     login: {
-      brand: 'CYPitch',
+      brand: 'MYPitch',
       subtitle: 'Владелец поля',
       emailLabel: 'Email',
       emailPlaceholder: 'you@business.com',
@@ -963,13 +963,13 @@ export const translations = {
       loginButton: 'Войти',
       requestAccess: 'Нет аккаунта? Подать заявку владельца',
       footerNote:
-        'Новые заявки владельцев полей проверяются командой CYPitch, прежде чем вы получите доступ.',
+        'Новые заявки владельцев полей проверяются командой MYPitch, прежде чем вы получите доступ.',
       rememberMe: 'Оставаться в системе на этом компьютере',
       errorEnterCredentials: 'Введите ваш email и пароль.',
     },
     signup: {
       heading: 'Стать владельцем поля',
-      subtitle: 'Расскажите о своём бизнесе. CYPitch проверит и одобрит ваш аккаунт.',
+      subtitle: 'Расскажите о своём бизнесе. MYPitch проверит и одобрит ваш аккаунт.',
       businessNameLabel: 'Название бизнеса',
       businessNamePlaceholder: 'напр. GoalZone Лимассол',
       contactNameLabel: 'Контактное имя',
@@ -986,9 +986,9 @@ export const translations = {
       errorPasswordMatch: 'Пароли не совпадают.',
       successTitle: 'Заявка отправлена',
       successText:
-        'Спасибо! Ваша заявка владельца поля отправлена в CYPitch на проверку. Вы получите доступ, как только она будет одобрена.',
+        'Спасибо! Ваша заявка владельца поля отправлена в MYPitch на проверку. Вы получите доступ, как только она будет одобрена.',
       successConfirmEmailText:
-        'Спасибо! Сначала подтвердите свой email, а затем войдите — ваша заявка будет ждать проверки CYPitch.',
+        'Спасибо! Сначала подтвердите свой email, а затем войдите — ваша заявка будет ждать проверки MYPitch.',
       backToLogin: 'Назад ко входу',
       rememberMe: 'Оставаться в системе на этом компьютере',
       footerNote: 'Уже есть аккаунт? Используйте экран входа.',
@@ -996,16 +996,16 @@ export const translations = {
     pending: {
       notOwnerTitle: 'Это не учётная запись владельца поля',
       notOwnerMessage:
-        'Эта учётная запись не зарегистрирована как владелец поля CYPitch. Если вы считаете, что это ошибка, обратитесь в службу поддержки CYPitch.',
+        'Эта учётная запись не зарегистрирована как владелец поля MYPitch. Если вы считаете, что это ошибка, обратитесь в службу поддержки MYPitch.',
       suspendedTitle: 'Учётная запись приостановлена',
       suspendedMessage:
-        'Ваша учётная запись владельца поля была приостановлена. Обратитесь в службу поддержки CYPitch для получения дополнительной информации.',
+        'Ваша учётная запись владельца поля была приостановлена. Обратитесь в службу поддержки MYPitch для получения дополнительной информации.',
       rejectedTitle: 'Заявка не одобрена',
       rejectedMessage:
-        'Ваша заявка владельца поля не была одобрена CYPitch. Обратитесь в службу поддержки CYPitch, если хотите, чтобы её рассмотрели повторно.',
+        'Ваша заявка владельца поля не была одобрена MYPitch. Обратитесь в службу поддержки MYPitch, если хотите, чтобы её рассмотрели повторно.',
       pendingTitle: 'Ожидает одобрения',
       pendingMessage:
-        'Ваша учётная запись владельца поля рассматривается командой CYPitch. Вы получите доступ сразу после одобрения.',
+        'Ваша учётная запись владельца поля рассматривается командой MYPitch. Вы получите доступ сразу после одобрения.',
       contactSupport: 'Связаться с поддержкой',
       logOut: 'Выйти',
     },
@@ -1013,20 +1013,20 @@ export const translations = {
       title: 'Принятие условий для владельцев',
       versionLabel: 'Условия для владельцев, версия {version} — действуют с 17 сентября 2026 г.',
       intro:
-        'Прежде чем вы сможете принимать бронирования, ознакомьтесь и примите текущие Условия для владельцев CYPitch. Вот основные моменты:',
+        'Прежде чем вы сможете принимать бронирования, ознакомьтесь и примите текущие Условия для владельцев MYPitch. Вот основные моменты:',
       summaryPoints: [
-        'Пока действует эта версия, CYPitch не взимает с вас плату за использование панели владельца, веб-сайта CYPitch или их функций.',
-        'Вы сами устанавливаете цену за час. Любая комиссия CYPitch добавляется сверх вашей цены при оплате пользователем — она никогда не вычитается из вашей выплаты.',
+        'Пока действует эта версия, MYPitch не взимает с вас плату за использование панели владельца, веб-сайта MYPitch или их функций.',
+        'Вы сами устанавливаете цену за час. Любая комиссия MYPitch добавляется сверх вашей цены при оплате пользователем — она никогда не вычитается из вашей выплаты.',
         'За каждый подтверждённый матч вы получаете выплату, равную вашей собственной цене за это бронирование.',
-        'Если CYPitch ожидает сильную непогоду или угрозу безопасности, мы можем сами заблокировать затронутые даты/время для новых онлайн-бронирований и постараемся уведомить вас по email — вы всё равно можете принять прямое бронирование сами на этот период.',
-        'Если подтверждённый матч должен быть отменён по исключительным причинам, затронутым пользователям возвращаются деньги; если ваша выплата уже была произведена, CYPitch возместит эту сумму с вашего указанного платёжного счёта.',
+        'Если MYPitch ожидает сильную непогоду или угрозу безопасности, мы можем сами заблокировать затронутые даты/время для новых онлайн-бронирований и постараемся уведомить вас по email — вы всё равно можете принять прямое бронирование сами на этот период.',
+        'Если подтверждённый матч должен быть отменён по исключительным причинам, затронутым пользователям возвращаются деньги; если ваша выплата уже была произведена, MYPitch возместит эту сумму с вашего указанного платёжного счёта.',
         'Вы обязаны вносить каждое внешнее бронирование, блокировку или закрытие в панель владельца сразу же, как только это происходит.',
-        'Если CYPitch изменит эти условия в будущем, изменение вступит в силу для вас только после того, как вам будет показана новая версия и вы дадите новое явное согласие — простое продолжение использования панели не считается согласием.',
+        'Если MYPitch изменит эти условия в будущем, изменение вступит в силу для вас только после того, как вам будет показана новая версия и вы дадите новое явное согласие — простое продолжение использования панели не считается согласием.',
       ],
       fullDocsNote:
-        'Полный текст Соглашения владельца поля CYPitch и Условий для владельцев был передан вам напрямую компанией CYPitch. Этот экран обобщает их ключевые положения.',
+        'Полный текст Соглашения владельца поля MYPitch и Условий для владельцев был передан вам напрямую компанией MYPitch. Этот экран обобщает их ключевые положения.',
       checkboxText:
-        'Я подтверждаю, что уполномочен(а) представлять данное спортивное учреждение/оператора, и принимаю Условия для владельцев CYPitch (версия указана выше) и подписанное Соглашение владельца поля CYPitch, включая правила ценообразования, бронирований, отмен, возвратов, выплат, управления расписанием, ответственности за внешние бронирования, оповещений о погоде/безопасности и защиты данных.',
+        'Я подтверждаю, что уполномочен(а) представлять данное спортивное учреждение/оператора, и принимаю Условия для владельцев MYPitch (версия указана выше) и подписанное Соглашение владельца поля MYPitch, включая правила ценообразования, бронирований, отмен, возвратов, выплат, управления расписанием, ответственности за внешние бронирования, оповещений о погоде/безопасности и защиты данных.',
       acceptButton: 'Принимаю',
       logOut: 'Выйти',
       errorMustCheck: 'Пожалуйста, отметьте галочку, подтверждающую принятие условий для владельцев.',
@@ -1036,7 +1036,7 @@ export const translations = {
       title: 'Расписание',
       subtitle: 'Управляйте бронированиями и графиком вашего поля.',
       noPitchLinked:
-        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки CYPitch для настройки.',
+        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
       blockSlot: 'Заблокировать время',
       addExternalBooking: 'Добавить внешнее бронирование',
       pastHint: 'Этот день уже прошёл — выберите сегодняшний или более поздний день, чтобы добавить бронирование.',
@@ -1074,7 +1074,7 @@ export const translations = {
       title: 'Доступность',
       subtitle: 'Установите обычные часы работы по дням недели.',
       noPitchLinked:
-        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки CYPitch для настройки.',
+        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
       hint:
         'В один день можно задать несколько периодов. Открыв 08:00–12:00 и 15:00–20:00, вы делаете 12:00–15:00 постоянно недоступным, не добавляя ничего в календарь. Время можно вводить и сокращённо — например, "21" или "930" — они автоматически превратятся в 21:00 и 09:30.',
       weeklyHours: 'Часы работы по неделям',
@@ -1118,7 +1118,7 @@ export const translations = {
       minutesSuffix: '{minutes} мин',
       perHour: '€{price} / час',
       noteText:
-        'Информацию, фотографии и цены поля может изменить только служба поддержки CYPitch — обратитесь на вкладке «Профиль», чтобы запросить изменение.',
+        'Информацию, фотографии и цены поля может изменить только служба поддержки MYPitch — обратитесь на вкладке «Профиль», чтобы запросить изменение.',
       manageBookingSettings: 'Управление настройками бронирования',
       bookingSettingsSummaryLabel: 'Настройки бронирования',
     },
@@ -1145,7 +1145,7 @@ export const translations = {
       title: 'Статистика',
       subtitle: 'По всем вашим полям, последние 30 дней в сравнении с предыдущими 30.',
       noPitchLinked:
-        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки CYPitch для настройки.',
+        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
       revenue: 'Доход',
       reservations: 'Бронирования',
       confirmationRate: 'Доля подтверждений',
@@ -1160,7 +1160,7 @@ export const translations = {
       title: 'Транзакции',
       subtitle: 'Выплаты за подтверждённые матчи на вашем поле.',
       noPitchLinked:
-        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки CYPitch для настройки.',
+        'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
       filterAll: 'Все',
       filterPendingConfirmation: 'Ожидает подтверждения',
       filterPaid: 'Оплачено',
@@ -1175,12 +1175,12 @@ export const translations = {
       darkModeSubtitle: 'Переключение между светлым и тёмным оформлением.',
       language: 'Язык',
       support: 'Поддержка',
-      emailSupport: 'Написать в поддержку CYPitch',
-      whatsapp: 'WhatsApp CYPitch',
+      emailSupport: 'Написать в поддержку MYPitch',
+      whatsapp: 'WhatsApp MYPitch',
       logOut: 'Выйти',
       deleteAccountRequest: 'Запросить удаление моей учётной записи',
       deleteEmailSubject: 'Запрос на удаление учётной записи',
-      deleteEmailBody: 'Пожалуйста, удалите мою учётную запись владельца поля CYPitch.',
+      deleteEmailBody: 'Пожалуйста, удалите мою учётную запись владельца поля MYPitch.',
     },
     addExternalBooking: {
       title: 'Добавить внешнее бронирование',
@@ -1206,7 +1206,7 @@ export const translations = {
       notesLabel: 'Заметки (необязательно)',
       notesPlaceholder: 'Добавьте любые дополнительные заметки…',
       noticeText:
-        'Это время будет отмечено как внешнее бронирование и станет недоступным для пользователей CYPitch.',
+        'Это время будет отмечено как внешнее бронирование и станет недоступным для пользователей MYPitch.',
       addBooking: 'Добавить внешнее бронирование',
       addWeeklyBooking: 'Добавить еженедельное бронирование',
       pastMessage: '{date} уже прошло. Бронирования можно добавлять только на сегодня или будущую дату.',
@@ -1299,7 +1299,7 @@ export const translations = {
         'Игрокам оформляется полный возврат. Ваша выплата за этот матч ещё не была произведена, поэтому больше ничего не причитается.',
       urgencyResultTitleClawback: 'Матч отменён — выплата будет возвращена',
       urgencyResultMessageClawback:
-        'Игрокам оформляется полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому CYPitch спишет эту сумму с вас через SEPA.',
+        'Игрокам оформляется полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому MYPitch спишет эту сумму с вас через SEPA.',
       cancellationRequestBannerTitle: 'Игрок запросил отмену',
       cancellationRequestReasonLabel: 'Причина игрока',
       cancellationRequestApprove: 'Одобрить и отменить матч',
@@ -1314,7 +1314,7 @@ export const translations = {
         'Игрок уведомлён и получит полный возврат. Ваша выплата за этот матч ещё не была произведена, поэтому больше ничего не причитается.',
       cancellationRequestApprovedTitleClawback: 'Запрос одобрен — выплата будет возвращена',
       cancellationRequestApprovedMessageClawback:
-        'Игрок уведомлён и получит полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому CYPitch спишет эту сумму с вас через SEPA.',
+        'Игрок уведомлён и получит полный возврат. Ваша выплата в размере €{amount} за этот матч уже была произведена, поэтому MYPitch спишет эту сумму с вас через SEPA.',
       cancellationRequestDeniedTitle: 'Запрос отклонён',
       cancellationRequestDeniedMessage: 'Игрок уведомлён о вашем объяснении. Матч по-прежнему состоится.',
     },
@@ -1372,7 +1372,7 @@ export const translations = {
       removeBlockedSlot: 'Снять блокировку времени',
       deleteDialogTitleExternal: 'Удалить внешнее бронирование?',
       deleteDialogTitleBlocked: 'Снять блокировку времени?',
-      deleteDialogAvailableAgain: 'Это время снова станет доступным для пользователей CYPitch.',
+      deleteDialogAvailableAgain: 'Это время снова станет доступным для пользователей MYPitch.',
       deleteAction: 'Удалить',
       keepIt: 'Оставить',
       justThisWeek: 'Только эту неделю',
@@ -1391,7 +1391,7 @@ export const translations = {
       repeatsIndefinitely:
         'Повторяется каждый {weekday} бессрочно. Новые недели добавляются автоматически, и это продолжается, пока вы не удалите бронирование.',
       skippedNoticeText:
-        'Любая неделя, уже занятая матчем CYPitch или другим бронированием, пропускается, и вам сообщат, какие именно.',
+        'Любая неделя, уже занятая матчем MYPitch или другим бронированием, пропускается, и вам сообщат, какие именно.',
       bookingCountOne: '{count} бронирование · последнее {date}',
       bookingCountOther: '{count} бронирований · последнее {date}',
       errorEndDateFormat: 'Введите дату окончания в формате ДД/ММ/ГГГГ.',
