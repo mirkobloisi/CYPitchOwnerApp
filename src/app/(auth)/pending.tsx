@@ -11,7 +11,7 @@ import { useAppTheme } from '../../theme/ThemeContext';
 import { radius, spacing } from '../../theme/layout';
 import { scaleFont, scaleLine } from '../../theme/typography';
 
-const SUPPORT_EMAIL = 'mypitch_help@protonmail.com';
+const SUPPORT_EMAIL = 'mypitch_help@proton.me';
 
 export default function PendingScreen() {
   const { colors } = useAppTheme();
