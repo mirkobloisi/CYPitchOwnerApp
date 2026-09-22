@@ -4,11 +4,13 @@ import {
   ActivityIndicator,
   Animated,
   GestureResponderEvent,
+  Pressable,
+  PressableProps,
+  StyleProp,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  TouchableOpacityProps,
   View,
+  ViewStyle,
 } from 'react-native';
 
 import { AppColors } from '../theme/palettes';
@@ -18,11 +20,12 @@ import { scaleFont } from '../theme/typography';
 
 type AppButtonVariant = 'primary' | 'outline' | 'ghost' | 'danger';
 
-type AppButtonProps = TouchableOpacityProps & {
+type AppButtonProps = Omit<PressableProps, 'style'> & {
   title: string;
   variant?: AppButtonVariant;
   fullWidth?: boolean;
   loading?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export default function AppButton({
@@ -34,6 +37,8 @@ export default function AppButton({
   style,
   onPressIn,
   onPressOut,
+  onHoverIn,
+  onHoverOut,
   ...props
 }: AppButtonProps) {
   const { colors } = useAppTheme();
@@ -46,23 +51,23 @@ export default function AppButton({
   const opacity = useRef(new Animated.Value(1)).current;
   const isDisabled = disabled || loading;
 
-  function animateTo(value: number, opacityValue: number) {
+  function animateTo(scaleValue: number, opacityValue: number, speed = 32) {
     Animated.spring(scale, {
-      toValue: value,
-      speed: 32,
+      toValue: scaleValue,
+      speed,
       bounciness: 7,
       useNativeDriver: true,
     }).start();
     Animated.timing(opacity, {
       toValue: opacityValue,
-      duration: 120,
+      duration: 140,
       useNativeDriver: true,
     }).start();
   }
 
   function handlePressIn(event: GestureResponderEvent) {
     if (!isDisabled) {
-      animateTo(0.955, 0.85);
+      animateTo(0.94, 0.85);
     }
 
     onPressIn?.(event);
@@ -76,6 +81,24 @@ export default function AppButton({
     onPressOut?.(event);
   }
 
+  // Web only (native ignores hover): a small lift on mouse-over, so a
+  // button gives feedback before the user even clicks it.
+  function handleHoverIn(event: any) {
+    if (!isDisabled) {
+      animateTo(1.02, 1, 20);
+    }
+
+    onHoverIn?.(event);
+  }
+
+  function handleHoverOut(event: any) {
+    if (!isDisabled) {
+      animateTo(1, 1, 20);
+    }
+
+    onHoverOut?.(event);
+  }
+
   const content = loading ? (
     <ActivityIndicator color={variant === 'primary' ? colors.blackText : colors.greenLight} />
   ) : (
@@ -85,11 +108,12 @@ export default function AppButton({
   );
 
   return (
-    <TouchableOpacity
-      activeOpacity={1}
+    <Pressable
       disabled={isDisabled}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      onHoverIn={handleHoverIn}
+      onHoverOut={handleHoverOut}
       style={[
         styles.touchable,
         fullWidth && styles.fullWidth,
@@ -122,7 +146,7 @@ export default function AppButton({
           <View style={[styles.base, variantStyles[variant]]}>{content}</View>
         )}
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 

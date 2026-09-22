@@ -111,10 +111,14 @@ const NavItem = forwardRef<View, NavItemProps>(function NavItem(
     <Pressable
       ref={ref}
       {...pressableProps}
-      style={({ pressed }) => [
+      style={(state) => [
         isDesktop ? themed.sidebarItem : themed.bottomItem,
         isDesktop && isFocused && themed.sidebarItemActive,
-        pressed && themed.itemPressed,
+        isDesktop &&
+          !isFocused &&
+          (state as { hovered?: boolean }).hovered &&
+          themed.sidebarItemHovered,
+        state.pressed && themed.itemPressed,
       ]}
     >
       <Ionicons name={icon} size={isDesktop ? 18 : 20} color={tint} />
@@ -189,6 +193,9 @@ const makeStyles = (colors: AppColors) =>
     sidebarItemActive: {
       backgroundColor: colors.greenSoft,
       borderColor: colors.borderGreen,
+    },
+    sidebarItemHovered: {
+      backgroundColor: colors.surfaceMuted,
     },
     sidebarLabel: {
       fontSize: scaleFont(13),

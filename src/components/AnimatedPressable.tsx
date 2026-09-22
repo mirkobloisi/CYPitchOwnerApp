@@ -21,21 +21,23 @@ export default function AnimatedPressable({
   disabled,
   onPressIn,
   onPressOut,
+  onHoverIn,
+  onHoverOut,
   ...props
 }: AnimatedPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
 
-  function animateTo(scaleValue: number, opacityValue: number) {
+  function animateTo(scaleValue: number, opacityValue: number, speed = 32) {
     Animated.spring(scale, {
       toValue: scaleValue,
-      speed: 32,
+      speed,
       bounciness: 7,
       useNativeDriver: true,
     }).start();
     Animated.timing(opacity, {
       toValue: opacityValue,
-      duration: 120,
+      duration: 140,
       useNativeDriver: true,
     }).start();
   }
@@ -56,11 +58,30 @@ export default function AnimatedPressable({
     onPressOut?.(event);
   }
 
+  // Web only (native ignores hover): a small lift on mouse-over.
+  function handleHoverIn(event: any) {
+    if (!disabled) {
+      animateTo(1.015, 1, 20);
+    }
+
+    onHoverIn?.(event);
+  }
+
+  function handleHoverOut(event: any) {
+    if (!disabled) {
+      animateTo(1, 1, 20);
+    }
+
+    onHoverOut?.(event);
+  }
+
   return (
     <Pressable
       disabled={disabled}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      onHoverIn={handleHoverIn}
+      onHoverOut={handleHoverOut}
       style={style}
       {...props}
     >
