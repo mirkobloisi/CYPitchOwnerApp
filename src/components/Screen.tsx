@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useLanguage } from '../i18n/LanguageContext';
 import { CONTENT_MAX_WIDTH, useBreakpoint } from '../theme/breakpoints';
 import { AppColors } from '../theme/palettes';
 import { useAppTheme } from '../theme/ThemeContext';
 import { spacing } from '../theme/layout';
 import AnimatedBackground from './AnimatedBackground';
+import AnimatedSwap from './AnimatedSwap';
 
 type ScreenProps = {
   children: ReactNode;
@@ -38,6 +40,7 @@ export default function Screen({
 }: ScreenProps) {
   const { colors } = useAppTheme();
   const { isWide } = useBreakpoint();
+  const { language } = useLanguage();
   const styles = makeStyles(colors);
 
   // Only constrain on a roomy screen; a phone keeps using its full width.
@@ -59,11 +62,15 @@ export default function Screen({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {children}
+              {/* Switching language rewrites every label on screen, so the
+                  whole screen cross-fades rather than snapping. */}
+              <AnimatedSwap swapKey={language}>{children}</AnimatedSwap>
             </ScrollView>
           ) : (
             <View style={[styles.container, styles.content, widthStyle, contentStyle]}>
-              {children}
+              <AnimatedSwap swapKey={language} style={styles.container}>
+                {children}
+              </AnimatedSwap>
             </View>
           )}
         </KeyboardAvoidingView>

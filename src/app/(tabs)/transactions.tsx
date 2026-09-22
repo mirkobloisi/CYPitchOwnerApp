@@ -3,6 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import AnimatedPressable from '../../components/AnimatedPressable';
+import AnimatedSwap from '../../components/AnimatedSwap';
 import AppHeader from '../../components/AppHeader';
 import Screen from '../../components/Screen';
 import StatusBadge from '../../components/StatusBadge';
@@ -123,6 +124,7 @@ export default function TransactionsScreen() {
         ))}
       </View>
 
+      <AnimatedSwap swapKey={isLoading ? 'loading' : filter}>
       {isLoading ? (
         <ActivityIndicator color={colors.greenLight} style={styles.loading} />
       ) : errorMessage ? (
@@ -170,6 +172,7 @@ export default function TransactionsScreen() {
           );
         })
       )}
+      </AnimatedSwap>
     </Screen>
   );
 }

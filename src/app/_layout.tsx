@@ -130,11 +130,28 @@ function AppGate() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="accept-terms" options={{ gestureEnabled: false }} />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="add-external-booking" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="block-slot" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="booking-settings" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="booking-details" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="manage-block" options={{ presentation: 'modal' }} />
+        {/* `presentation: 'modal'` gives native its sheet transition, but on
+            web it has none of its own — so state the slide explicitly. */}
+        <Stack.Screen
+          name="add-external-booking"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="block-slot"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="booking-settings"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="booking-details"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
+        <Stack.Screen
+          name="manage-block"
+          options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+        />
       </Stack>
     </>
   );

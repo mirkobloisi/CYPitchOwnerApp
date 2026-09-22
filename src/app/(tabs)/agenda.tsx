@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import AnimatedPressable from '../../components/AnimatedPressable';
+import AnimatedSwap from '../../components/AnimatedSwap';
 import AppHeader from '../../components/AppHeader';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -504,6 +505,7 @@ export default function AgendaScreen() {
         </AnimatedPressable>
       </View>
 
+      <AnimatedSwap swapKey={isLoading ? 'loading' : viewMode}>
       {isLoading ? (
         <View style={styles.loadingBox}>
           <ActivityIndicator color={colors.greenLight} />
@@ -668,6 +670,7 @@ export default function AgendaScreen() {
           )}
         </View>
       )}
+      </AnimatedSwap>
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
         </View>
@@ -702,7 +705,10 @@ export default function AgendaScreen() {
         </View>
       </View>
 
-      <View style={[styles.dayPanel, isDesktop && styles.dayPanelDesktop]}>
+      <AnimatedSwap
+        swapKey={selectedDate.toDateString()}
+        style={[styles.dayPanel, isDesktop && styles.dayPanelDesktop]}
+      >
         <Text style={styles.dayPanelTitle}>
           {selectedDate.toLocaleDateString(undefined, {
             weekday: 'long',
@@ -721,7 +727,7 @@ export default function AgendaScreen() {
         ) : (
           selectedDayEvents.map((event) => renderEventCard(event))
         )}
-      </View>
+      </AnimatedSwap>
 
       <View style={styles.ownerCard}>
         {pitchOwner?.logo_url ? (
