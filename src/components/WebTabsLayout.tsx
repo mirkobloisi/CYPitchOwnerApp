@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { usePathname } from 'expo-router';
 import { TabList, TabSlot, TabTrigger, TabTriggerSlotProps, Tabs } from 'expo-router/ui';
 import React, { forwardRef, ReactNode, useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { useTranslation } from '../i18n/LanguageContext';
 import {
@@ -36,15 +38,20 @@ const NAV_ITEMS: { name: string; href: string; labelKey: string; icon: IconName 
 export default function WebTabsLayout() {
   const { isDesktop } = useBreakpoint();
   const { t } = useTranslation();
+  const pathname = usePathname();
 
   return (
     <Tabs style={styles.root}>
-      <TabSlot
+      <Animated.View
+        key={pathname}
+        entering={FadeIn.duration(180)}
         style={[
           styles.slot,
           isDesktop ? { paddingLeft: SIDEBAR_WIDTH } : { paddingBottom: BOTTOM_BAR_HEIGHT },
         ]}
-      />
+      >
+        <TabSlot style={styles.slot} />
+      </Animated.View>
 
       <TabList asChild>
         <NavBar isDesktop={isDesktop}>
