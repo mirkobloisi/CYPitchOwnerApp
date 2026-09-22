@@ -3,7 +3,7 @@ import { usePathname } from 'expo-router';
 import { TabList, TabSlot, TabTrigger, TabTriggerSlotProps, Tabs } from 'expo-router/ui';
 import React, { forwardRef, ReactNode, useMemo } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, ReduceMotion } from 'react-native-reanimated';
 
 import { useTranslation } from '../i18n/LanguageContext';
 import {
@@ -44,7 +44,10 @@ export default function WebTabsLayout() {
     <Tabs style={styles.root}>
       <Animated.View
         key={pathname}
-        entering={FadeIn.duration(180)}
+        // Reanimated switches entering animations off when the OS asks for
+        // reduced motion. This one only cross-fades opacity — nothing moves —
+        // so it's safe to keep either way.
+        entering={FadeIn.duration(240).reduceMotion(ReduceMotion.Never)}
         style={[
           styles.slot,
           isDesktop ? { paddingLeft: SIDEBAR_WIDTH } : { paddingBottom: BOTTOM_BAR_HEIGHT },
