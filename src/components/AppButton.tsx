@@ -43,20 +43,26 @@ export default function AppButton({
   );
 
   const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
   const isDisabled = disabled || loading;
 
-  function animateTo(value: number) {
+  function animateTo(value: number, opacityValue: number) {
     Animated.spring(scale, {
       toValue: value,
       speed: 32,
       bounciness: 7,
       useNativeDriver: true,
     }).start();
+    Animated.timing(opacity, {
+      toValue: opacityValue,
+      duration: 120,
+      useNativeDriver: true,
+    }).start();
   }
 
   function handlePressIn(event: GestureResponderEvent) {
     if (!isDisabled) {
-      animateTo(0.955);
+      animateTo(0.955, 0.85);
     }
 
     onPressIn?.(event);
@@ -64,7 +70,7 @@ export default function AppButton({
 
   function handlePressOut(event: GestureResponderEvent) {
     if (!isDisabled) {
-      animateTo(1);
+      animateTo(1, 1);
     }
 
     onPressOut?.(event);
@@ -99,6 +105,7 @@ export default function AppButton({
           variant === 'danger' && styles.dangerShadow,
           {
             transform: [{ scale }],
+            opacity,
           },
         ]}
       >

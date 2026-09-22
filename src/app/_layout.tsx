@@ -119,7 +119,14 @@ function AppGate() {
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'fade',
+          animationDuration: 180,
+        }}
+      >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="accept-terms" options={{ gestureEnabled: false }} />
         <Stack.Screen name="(tabs)" />

@@ -24,19 +24,25 @@ export default function AnimatedPressable({
   ...props
 }: AnimatedPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
 
-  function animateTo(value: number) {
+  function animateTo(scaleValue: number, opacityValue: number) {
     Animated.spring(scale, {
-      toValue: value,
+      toValue: scaleValue,
       speed: 32,
       bounciness: 7,
+      useNativeDriver: true,
+    }).start();
+    Animated.timing(opacity, {
+      toValue: opacityValue,
+      duration: 120,
       useNativeDriver: true,
     }).start();
   }
 
   function handlePressIn(event: GestureResponderEvent) {
     if (!disabled) {
-      animateTo(pressedScale);
+      animateTo(pressedScale, 0.85);
     }
 
     onPressIn?.(event);
@@ -44,7 +50,7 @@ export default function AnimatedPressable({
 
   function handlePressOut(event: GestureResponderEvent) {
     if (!disabled) {
-      animateTo(1);
+      animateTo(1, 1);
     }
 
     onPressOut?.(event);
@@ -61,6 +67,7 @@ export default function AnimatedPressable({
       <Animated.View
         style={{
           transform: [{ scale }],
+          opacity,
         }}
       >
         {children}
