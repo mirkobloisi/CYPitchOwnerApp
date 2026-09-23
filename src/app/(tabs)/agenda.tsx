@@ -1,9 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import AnimatedPressable from '../../components/AnimatedPressable';
+import AnimatedSelectable from '../../components/AnimatedSelectable';
 import AnimatedSwap from '../../components/AnimatedSwap';
 import AppHeader from '../../components/AppHeader';
 import Screen from '../../components/Screen';
@@ -424,6 +425,7 @@ export default function AgendaScreen() {
       <View style={styles.actionsRow}>
         <AnimatedPressable
           style={[styles.actionButtonOutline, selectedDayIsPast && styles.actionDisabled]}
+          hoverScale={1.03}
           onPress={openBlockSlot}
           disabled={selectedDayIsPast}
         >
@@ -433,6 +435,7 @@ export default function AgendaScreen() {
 
         <AnimatedPressable
           style={[styles.actionButtonPrimary, selectedDayIsPast && styles.actionDisabled]}
+          hoverScale={1.02}
           onPress={openAddExternalBooking}
           disabled={selectedDayIsPast}
         >
@@ -477,13 +480,29 @@ export default function AgendaScreen() {
             const label =
               mode === 'week' ? t('agenda.viewWeek') : mode === 'month' ? t('agenda.viewMonth') : t('agenda.viewList');
             return (
-              <AnimatedPressable
+              <AnimatedSelectable
                 key={mode}
-                style={[styles.viewToggleButton, isActive && styles.viewToggleButtonActive]}
+                active={isActive}
+                style={styles.viewToggleButton}
+                background={['transparent', colors.blue]}
                 onPress={() => selectViewMode(mode)}
               >
-                <Text style={[styles.viewToggleText, isActive && styles.viewToggleTextActive]}>{label}</Text>
-              </AnimatedPressable>
+                {(progress) => (
+                  <Animated.Text
+                    style={[
+                      styles.viewToggleText,
+                      {
+                        color: progress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [colors.grey, colors.white],
+                        }),
+                      },
+                    ]}
+                  >
+                    {label}
+                  </Animated.Text>
+                )}
+              </AnimatedSelectable>
             );
           })}
         </View>
@@ -527,13 +546,12 @@ export default function AgendaScreen() {
               const isSelected = isSameDay(day, selectedDate);
 
               return (
-                <AnimatedPressable
+                <AnimatedSelectable
                   key={day.toISOString()}
-                  style={[
-                    styles.dayCell,
-                    isSelected && styles.dayCellSelected,
-                    !inMonth && styles.dayCellOutside,
-                  ]}
+                  active={isSelected}
+                  style={[styles.dayCell, !inMonth && styles.dayCellOutside]}
+                  background={['transparent', colors.greenSoft]}
+                  borderColor={['transparent', colors.borderGreen]}
                   onPress={() => setSelectedDate(day)}
                 >
                   <Text
@@ -557,7 +575,7 @@ export default function AgendaScreen() {
                       );
                     })}
                   </View>
-                </AnimatedPressable>
+                </AnimatedSelectable>
               );
             })}
           </View>
@@ -873,16 +891,9 @@ const makeStyles = (colors: AppColors) =>
       paddingVertical: 7,
       borderRadius: radius.round,
     },
-    viewToggleButtonActive: {
-      backgroundColor: colors.blue,
-    },
     viewToggleText: {
-      color: colors.grey,
       fontSize: scaleFont(12),
       fontWeight: '800',
-    },
-    viewToggleTextActive: {
-      color: colors.white,
     },
     monthNav: {
       flexDirection: 'row',
@@ -931,11 +942,10 @@ const makeStyles = (colors: AppColors) =>
       justifyContent: 'center',
       borderRadius: radius.sm,
       marginBottom: 2,
-    },
-    dayCellSelected: {
-      backgroundColor: colors.greenSoft,
+      // Always present but transparent until selected, so fading the colour
+      // in can't shift the grid by a pixel.
       borderWidth: 1,
-      borderColor: colors.borderGreen,
+      borderColor: 'transparent',
     },
     dayCellOutside: {
       opacity: 0.35,

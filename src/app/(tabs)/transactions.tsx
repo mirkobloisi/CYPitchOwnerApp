@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Animated, StyleSheet, Text, View } from 'react-native';
 
-import AnimatedPressable from '../../components/AnimatedPressable';
+import AnimatedSelectable from '../../components/AnimatedSelectable';
 import AnimatedSwap from '../../components/AnimatedSwap';
 import AppHeader from '../../components/AppHeader';
 import Screen from '../../components/Screen';
@@ -107,20 +107,30 @@ export default function TransactionsScreen() {
 
       <View style={styles.filterRow}>
         {FILTERS.map((option) => (
-          <AnimatedPressable
+          <AnimatedSelectable
             key={option.key}
-            style={[styles.filterChip, filter === option.key && styles.filterChipActive]}
+            active={filter === option.key}
+            style={styles.filterChip}
+            background={[colors.card, colors.greenSoft]}
+            borderColor={[colors.border, colors.borderGreen]}
             onPress={() => setFilter(option.key)}
           >
-            <Text
-              style={[
-                styles.filterChipText,
-                filter === option.key && styles.filterChipTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </AnimatedPressable>
+            {(progress) => (
+              <Animated.Text
+                style={[
+                  styles.filterChipText,
+                  {
+                    color: progress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [colors.grey, colors.greenLight],
+                    }),
+                  },
+                ]}
+              >
+                {option.label}
+              </Animated.Text>
+            )}
+          </AnimatedSelectable>
         ))}
       </View>
 
@@ -209,17 +219,9 @@ const makeStyles = (colors: AppColors) =>
       borderColor: colors.border,
       backgroundColor: colors.card,
     },
-    filterChipActive: {
-      backgroundColor: colors.greenSoft,
-      borderColor: colors.borderGreen,
-    },
     filterChipText: {
-      color: colors.grey,
       fontSize: scaleFont(12),
       fontWeight: '800',
-    },
-    filterChipTextActive: {
-      color: colors.greenLight,
     },
     row: {
       flexDirection: 'row',

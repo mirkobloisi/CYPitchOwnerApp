@@ -12,12 +12,15 @@ type AnimatedPressableProps = PressableProps & {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   pressedScale?: number;
+  /** Web-only lift on mouse-over. Larger for standalone buttons than cards. */
+  hoverScale?: number;
 };
 
 export default function AnimatedPressable({
   children,
   style,
   pressedScale = 0.94,
+  hoverScale = 1.015,
   disabled,
   onPressIn,
   onPressOut,
@@ -61,7 +64,7 @@ export default function AnimatedPressable({
   // Web only (native ignores hover): a small lift on mouse-over.
   function handleHoverIn(event: any) {
     if (!disabled) {
-      animateTo(1.015, 1, 20);
+      animateTo(hoverScale, 1, 20);
     }
 
     onHoverIn?.(event);
