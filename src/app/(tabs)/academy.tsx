@@ -304,43 +304,6 @@ export default function AcademyScreen() {
     <Screen maxWidth={900}>
       <AppHeader title={t('academy.title')} subtitle={t('academy.subtitle')} showBack={false} />
 
-      {/* Which academy the tabs below act on. */}
-      {hasAcademies ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
-        >
-          {academies.map((item) => (
-            <AnimatedSelectable
-              key={item.id}
-              active={item.id === selectedId}
-              style={styles.academyChip}
-              background={[colors.card, colors.greenSoft]}
-              borderColor={[colors.border, colors.borderGreen]}
-              onPress={() => selectAcademy(item.id)}
-            >
-              {(progress) => (
-                <Animated.Text
-                  style={[
-                    styles.chipText,
-                    {
-                      color: progress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [colors.grey, colors.greenLight],
-                      }),
-                    },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {item.name}
-                </Animated.Text>
-              )}
-            </AnimatedSelectable>
-          ))}
-        </ScrollView>
-      ) : null}
-
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -448,12 +411,13 @@ export default function AcademyScreen() {
                       key={item.id}
                       pressedScale={0.98}
                       hoverScale={1.01}
-                      onPress={() =>
+                      onPress={() => {
+                        selectAcademy(item.id);
                         router.push({
                           pathname: '/academy-details',
                           params: { academyId: item.id },
-                        } as any)
-                      }
+                        } as any);
+                      }}
                     >
                       <View style={styles.academyCard}>
                         {item.logo_url ? (
@@ -991,13 +955,6 @@ const makeStyles = (colors: AppColors) =>
       gap: spacing.sm,
       paddingBottom: spacing.sm,
       paddingRight: spacing.sm,
-    },
-    academyChip: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: 8,
-      borderRadius: radius.round,
-      borderWidth: 1,
-      maxWidth: 220,
     },
     subTabChip: {
       paddingHorizontal: spacing.md,
