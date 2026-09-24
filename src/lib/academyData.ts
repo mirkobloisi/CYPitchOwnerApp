@@ -117,6 +117,28 @@ export async function respondToEnrolment(enrolmentId: string, approve: boolean) 
     .eq('id', enrolmentId);
 }
 
+export type OwnerPitch = {
+  id: string;
+  name: string;
+  city: string | null;
+  area: string | null;
+  maps_url: string | null;
+};
+
+/**
+ * The owner's own pitches, used to pick a court instead of typing its name.
+ * Lives in `public`, not the academy schema, so no .schema() here.
+ */
+export async function fetchMyPitches(pitchOwnerId: string): Promise<OwnerPitch[]> {
+  const { data } = await supabase
+    .from('pitches')
+    .select('id, name, city, area, maps_url')
+    .eq('pitch_owner_id', pitchOwnerId)
+    .order('name');
+
+  return (data ?? []) as OwnerPitch[];
+}
+
 export type SessionKind = 'training' | 'match';
 
 export type SessionRow = {
@@ -131,11 +153,13 @@ export type SessionRow = {
   opponent: string | null;
   notes: string | null;
   is_cancelled: boolean;
-  recurrence_group_id: string | null;
+  recurrence: 'none' | 'weekly';
+  /** Null with recurrence 'weekly' means it repeats indefinitely. */
+  recurrence_until: string | null;
 };
 
 const SESSION_COLUMNS =
-  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence_group_id';
+  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence, recurrence_until';
 
 export async function fetchSessions(
   academyId: string,
@@ -152,11 +176,10 @@ export async function fetchSessions(
 }
 
 /**
- * Creates one session, or a weekly series. Each occurrence is a real row
- * sharing a recurrence_group_id, so a single week can later be moved or
- * cancelled without unpicking a rule.
+ * One row per session, carrying its repeat rule — not one row per week.
+ * A weekly session with no end date repeats indefinitely.
  */
-export async function createSessions(input: {
+export async function createSession(input: {
   academyId: string;
   kind: SessionKind;
   title: string;
@@ -166,21 +189,21 @@ export async function createSessions(input: {
   mapsUrl?: string | null;
   opponent?: string | null;
   notes?: string | null;
-  repeatWeekly?: boolean;
-  repeatUntil?: string | null;
+  recurrence?: 'none' | 'weekly';
+  recurrenceUntil?: string | null;
 }) {
-  return academy().rpc('create_sessions', {
+  return academy().rpc('create_session', {
     target_academy_id: input.academyId,
     session_kind: input.kind,
     session_title: input.title.trim(),
-    first_starts_at: input.startsAt,
-    first_ends_at: input.endsAt,
+    session_starts_at: input.startsAt,
+    session_ends_at: input.endsAt,
     location_name: input.locationName?.trim() || null,
     maps_url: input.mapsUrl?.trim() || null,
     opponent: input.opponent?.trim() || null,
     notes: input.notes?.trim() || null,
-    repeat_weekly: input.repeatWeekly ?? false,
-    repeat_until: input.repeatUntil || null,
+    recurrence: input.recurrence ?? 'none',
+    recurrence_until: input.recurrenceUntil || null,
   });
 }
 
@@ -195,13 +218,6 @@ export async function deleteSession(sessionId: string) {
   return academy().from('sessions').delete().eq('id', sessionId);
 }
 
-/** Removes every remaining occurrence of a repeating series. */
-export async function deleteSeries(recurrenceGroupId: string) {
-  return academy()
-    .from('sessions')
-    .delete()
-    .eq('recurrence_group_id', recurrenceGroupId);
-}
 
 /** Age in whole years, used to show who is a child at a glance. */
 export function ageFromDateOfBirth(dateOfBirth: string | null): number | null {

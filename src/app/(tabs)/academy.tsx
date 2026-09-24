@@ -16,21 +16,25 @@ import AnimatedSelectable from '../../components/AnimatedSelectable';
 import AnimatedSwap from '../../components/AnimatedSwap';
 import AppButton from '../../components/AppButton';
 import AppHeader from '../../components/AppHeader';
+import CalendarModal from '../../components/CalendarModal';
+import OptionsModal, { PickerOption } from '../../components/OptionsModal';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useAuth } from '../../lib/auth';
 import {
   AcademyRow,
   EnrolmentRow,
+  OwnerPitch,
   SessionKind,
   SessionRow,
   ageFromDateOfBirth,
   cancelSession,
   createAcademy,
-  createSessions,
+  createSession,
   deleteSession,
   fetchEnrolments,
   fetchMyAcademies,
+  fetchMyPitches,
   fetchSessions,
   respondToEnrolment,
 } from '../../lib/academyData';
@@ -68,16 +72,22 @@ export default function AcademyScreen() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [pitches, setPitches] = useState<OwnerPitch[]>([]);
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [sessionTime, setSessionTime] = useState('');
-  const [sessionDuration, setSessionDuration] = useState('90');
-  const [sessionLocation, setSessionLocation] = useState('');
-  const [sessionMapsUrl, setSessionMapsUrl] = useState('');
+  const [sessionDuration, setSessionDuration] = useState(90);
+  const [sessionPitchId, setSessionPitchId] = useState<string | null>(null);
   const [sessionOpponent, setSessionOpponent] = useState('');
   const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [repeatForever, setRepeatForever] = useState(true);
   const [repeatUntil, setRepeatUntil] = useState('');
+
+  // Which picker is open, if any.
+  const [picker, setPicker] = useState<'date' | 'time' | 'duration' | 'pitch' | 'until' | null>(
+    null
+  );
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -119,33 +129,43 @@ export default function AcademyScreen() {
     if (subTab === 'trainings' || subTab === 'matches') loadSessions();
   }, [subTab, loadSessions]);
 
+  useEffect(() => {
+    if (pitchOwner?.id) fetchMyPitches(pitchOwner.id).then(setPitches);
+  }, [pitchOwner?.id]);
+
+  const selectedPitch = pitches.find((pitch) => pitch.id === sessionPitchId) ?? null;
+
   async function handleCreateSession() {
     if (!selectedId || isCreating) return;
 
-    // Times are entered as plain local date/time; build the instant from them.
     const startsAt = new Date(`${sessionDate}T${sessionTime}`);
     if (Number.isNaN(startsAt.getTime())) {
       setErrorMessage(t('academy.invalidDateTime'));
       return;
     }
 
-    const minutes = Number(sessionDuration) || 90;
-    const endsAt = new Date(startsAt.getTime() + minutes * 60000);
+    if (repeatWeekly && !repeatForever && !repeatUntil) {
+      setErrorMessage(t('academy.repeatNeedsEnd'));
+      return;
+    }
+
+    const endsAt = new Date(startsAt.getTime() + sessionDuration * 60000);
 
     setIsCreating(true);
     setErrorMessage('');
 
-    const { error } = await createSessions({
+    const { error } = await createSession({
       academyId: selectedId,
       kind: sessionKind,
       title: sessionTitle,
       startsAt: startsAt.toISOString(),
       endsAt: endsAt.toISOString(),
-      locationName: sessionLocation,
-      mapsUrl: sessionMapsUrl,
+      // The pitch carries its own Maps link, so the owner never re-enters one.
+      locationName: selectedPitch?.name ?? null,
+      mapsUrl: selectedPitch?.maps_url ?? null,
       opponent: sessionKind === 'match' ? sessionOpponent : null,
-      repeatWeekly,
-      repeatUntil: repeatWeekly ? repeatUntil : null,
+      recurrence: repeatWeekly ? 'weekly' : 'none',
+      recurrenceUntil: repeatWeekly && !repeatForever ? repeatUntil : null,
     });
 
     setIsCreating(false);
@@ -158,13 +178,51 @@ export default function AcademyScreen() {
     setSessionTitle('');
     setSessionDate('');
     setSessionTime('');
-    setSessionLocation('');
-    setSessionMapsUrl('');
+    setSessionPitchId(null);
     setSessionOpponent('');
     setRepeatWeekly(false);
+    setRepeatForever(true);
     setRepeatUntil('');
     setShowSessionForm(false);
     loadSessions();
+  }
+
+  const timeOptions: PickerOption[] = useMemo(() => {
+    const options: PickerOption[] = [];
+    for (let minutes = 6 * 60; minutes <= 22 * 60; minutes += 15) {
+      const label = `${`${Math.floor(minutes / 60)}`.padStart(2, '0')}:${`${minutes % 60}`.padStart(2, '0')}`;
+      options.push({ value: label, label });
+    }
+    return options;
+  }, []);
+
+  const durationOptions: PickerOption[] = useMemo(
+    () =>
+      [45, 60, 75, 90, 105, 120, 150].map((minutes) => ({
+        value: String(minutes),
+        label: t('academy.durationValue').replace('{minutes}', String(minutes)),
+      })),
+    [t]
+  );
+
+  const pitchOptions: PickerOption[] = useMemo(
+    () =>
+      pitches.map((pitch) => ({
+        value: pitch.id,
+        label: pitch.name,
+        hint: [pitch.area, pitch.city].filter(Boolean).join(', ') || null,
+      })),
+    [pitches]
+  );
+
+  function formatIsoDate(iso: string) {
+    if (!iso) return '';
+    return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
   }
 
   async function handleCreate() {
@@ -419,31 +477,33 @@ export default function AcademyScreen() {
                     />
 
                     <View style={styles.inputRow}>
-                      <TextInput
-                        style={[styles.input, styles.inputHalf]}
-                        value={sessionDate}
-                        onChangeText={setSessionDate}
-                        placeholder={t('academy.datePlaceholder')}
-                        placeholderTextColor={colors.greyDark}
-                        autoCapitalize="none"
+                      <PickerField
+                        styles={styles}
+                        colors={colors}
+                        icon="calendar-outline"
+                        label={t('academy.dateLabel')}
+                        value={formatIsoDate(sessionDate)}
+                        style={styles.inputHalf}
+                        onPress={() => setPicker('date')}
                       />
-                      <TextInput
-                        style={[styles.input, styles.inputHalf]}
+                      <PickerField
+                        styles={styles}
+                        colors={colors}
+                        icon="time-outline"
+                        label={t('academy.timeLabel')}
                         value={sessionTime}
-                        onChangeText={setSessionTime}
-                        placeholder={t('academy.timePlaceholder')}
-                        placeholderTextColor={colors.greyDark}
-                        autoCapitalize="none"
+                        style={styles.inputHalf}
+                        onPress={() => setPicker('time')}
                       />
                     </View>
 
-                    <TextInput
-                      style={styles.input}
-                      value={sessionDuration}
-                      onChangeText={setSessionDuration}
-                      placeholder={t('academy.durationPlaceholder')}
-                      placeholderTextColor={colors.greyDark}
-                      keyboardType="number-pad"
+                    <PickerField
+                      styles={styles}
+                      colors={colors}
+                      icon="hourglass-outline"
+                      label={t('academy.durationLabel')}
+                      value={t('academy.durationValue').replace('{minutes}', String(sessionDuration))}
+                      onPress={() => setPicker('duration')}
                     />
 
                     {sessionKind === 'match' ? (
@@ -456,21 +516,21 @@ export default function AcademyScreen() {
                       />
                     ) : null}
 
-                    <TextInput
-                      style={styles.input}
-                      value={sessionLocation}
-                      onChangeText={setSessionLocation}
-                      placeholder={t('academy.locationPlaceholder')}
-                      placeholderTextColor={colors.greyDark}
+                    <PickerField
+                      styles={styles}
+                      colors={colors}
+                      icon="location-outline"
+                      label={t('academy.pitchLabel')}
+                      value={selectedPitch?.name ?? ''}
+                      onPress={() => setPicker('pitch')}
                     />
-                    <TextInput
-                      style={styles.input}
-                      value={sessionMapsUrl}
-                      onChangeText={setSessionMapsUrl}
-                      placeholder={t('academy.mapsUrlPlaceholder')}
-                      placeholderTextColor={colors.greyDark}
-                      autoCapitalize="none"
-                    />
+
+                    {selectedPitch?.maps_url ? (
+                      <View style={styles.mapsNote}>
+                        <Ionicons name="map-outline" size={14} color={colors.blueLight} />
+                        <Text style={styles.mapsNoteText}>{t('academy.mapsLinked')}</Text>
+                      </View>
+                    ) : null}
 
                     <AnimatedPressable
                       style={styles.toggleRow}
@@ -485,14 +545,30 @@ export default function AcademyScreen() {
                     </AnimatedPressable>
 
                     {repeatWeekly ? (
-                      <TextInput
-                        style={styles.input}
-                        value={repeatUntil}
-                        onChangeText={setRepeatUntil}
-                        placeholder={t('academy.repeatUntilPlaceholder')}
-                        placeholderTextColor={colors.greyDark}
-                        autoCapitalize="none"
-                      />
+                      <>
+                        <AnimatedPressable
+                          style={styles.toggleRow}
+                          onPress={() => setRepeatForever((value) => !value)}
+                        >
+                          <Ionicons
+                            name={repeatForever ? 'radio-button-on' : 'radio-button-off'}
+                            size={19}
+                            color={repeatForever ? colors.greenLight : colors.greyDark}
+                          />
+                          <Text style={styles.toggleText}>{t('academy.repeatForever')}</Text>
+                        </AnimatedPressable>
+
+                        {!repeatForever ? (
+                          <PickerField
+                            styles={styles}
+                            colors={colors}
+                            icon="calendar-outline"
+                            label={t('academy.repeatUntilLabel')}
+                            value={formatIsoDate(repeatUntil)}
+                            onPress={() => setPicker('until')}
+                          />
+                        ) : null}
+                      </>
                     ) : null}
 
                     {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -573,7 +649,87 @@ export default function AcademyScreen() {
           )}
         </AnimatedSwap>
       )}
+
+      <CalendarModal
+        visible={picker === 'date'}
+        value={sessionDate}
+        title={t('academy.dateLabel')}
+        minDate={new Date()}
+        onSelect={setSessionDate}
+        onClose={() => setPicker(null)}
+      />
+
+      <CalendarModal
+        visible={picker === 'until'}
+        value={repeatUntil}
+        title={t('academy.repeatUntilLabel')}
+        minDate={sessionDate ? new Date(`${sessionDate}T00:00:00`) : new Date()}
+        onSelect={setRepeatUntil}
+        onClose={() => setPicker(null)}
+      />
+
+      <OptionsModal
+        visible={picker === 'time'}
+        title={t('academy.timeLabel')}
+        options={timeOptions}
+        value={sessionTime || null}
+        onSelect={setSessionTime}
+        onClose={() => setPicker(null)}
+      />
+
+      <OptionsModal
+        visible={picker === 'duration'}
+        title={t('academy.durationLabel')}
+        options={durationOptions}
+        value={String(sessionDuration)}
+        onSelect={(next) => setSessionDuration(Number(next))}
+        onClose={() => setPicker(null)}
+      />
+
+      <OptionsModal
+        visible={picker === 'pitch'}
+        title={t('academy.pitchLabel')}
+        options={pitchOptions}
+        value={sessionPitchId}
+        emptyText={t('academy.noPitches')}
+        onSelect={setSessionPitchId}
+        onClose={() => setPicker(null)}
+      />
     </Screen>
+  );
+}
+
+/** A read-only field that opens a picker instead of a keyboard. */
+function PickerField({
+  styles,
+  colors,
+  icon,
+  label,
+  value,
+  style,
+  onPress,
+}: {
+  styles: ReturnType<typeof makeStyles>;
+  colors: AppColors;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  style?: object;
+  onPress: () => void;
+}) {
+  return (
+    <AnimatedPressable style={[styles.pickerField, style]} onPress={onPress}>
+      <Ionicons name={icon} size={16} color={colors.greyDark} />
+
+      <View style={styles.pickerTextWrap}>
+        <Text style={styles.pickerLabel}>{label}</Text>
+        <Text style={[styles.pickerValue, !value && styles.pickerValueEmpty]} numberOfLines={1}>
+          {value || '—'}
+        </Text>
+      </View>
+
+      <Ionicons name="chevron-down" size={15} color={colors.greyDark} />
+    </AnimatedPressable>
   );
 }
 
@@ -642,7 +798,17 @@ function SessionRowView({
           {[
             when,
             session.location_name,
-            session.recurrence_group_id ? t('academy.repeats') : null,
+            session.recurrence === 'weekly'
+              ? session.recurrence_until
+                ? t('academy.repeatsUntil').replace(
+                    '{date}',
+                    new Date(`${session.recurrence_until}T00:00:00`).toLocaleDateString(undefined, {
+                      day: 'numeric',
+                      month: 'short',
+                    })
+                  )
+                : t('academy.repeatsForever')
+              : null,
             session.is_cancelled ? t('academy.cancelled') : null,
           ]
             .filter(Boolean)
@@ -794,6 +960,49 @@ const makeStyles = (colors: AppColors) =>
     },
     sessionCancelled: {
       opacity: 0.55,
+    },
+    pickerField: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.cardSoft,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 9,
+      marginBottom: spacing.sm,
+    },
+    pickerTextWrap: {
+      flex: 1,
+      minWidth: 0,
+    },
+    pickerLabel: {
+      color: colors.greyDark,
+      fontSize: scaleFont(10),
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    pickerValue: {
+      color: colors.white,
+      fontSize: scaleFont(14),
+      fontWeight: '700',
+      marginTop: 1,
+    },
+    pickerValueEmpty: {
+      color: colors.greyDark,
+    },
+    mapsNote: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: spacing.sm,
+    },
+    mapsNoteText: {
+      color: colors.blueLight,
+      fontSize: scaleFont(12),
+      fontWeight: '700',
     },
     formActions: {
       flexDirection: 'row',
