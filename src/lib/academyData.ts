@@ -107,6 +107,70 @@ export async function fetchEnrolments(academyId: string): Promise<EnrolmentRow[]
   return rows.map((row) => ({ ...row, member: byId.get(row.member_id) ?? null }));
 }
 
+export type AcademyCounts = {
+  players: number;
+  parents: number;
+  pending: number;
+};
+
+/**
+ * Member counts for several academies at once, so the list doesn't fire a
+ * query per card.
+ */
+export async function fetchAcademyCounts(
+  academyIds: string[]
+): Promise<Record<string, AcademyCounts>> {
+  const empty: AcademyCounts = { players: 0, parents: 0, pending: 0 };
+  if (academyIds.length === 0) return {};
+
+  const { data: enrolments } = await academy()
+    .from('enrolments')
+    .select('academy_id, member_id, status')
+    .in('academy_id', academyIds);
+
+  const rows = (enrolments ?? []) as {
+    academy_id: string;
+    member_id: string;
+    status: string;
+  }[];
+
+  const memberIds = [...new Set(rows.map((row) => row.member_id))];
+  const { data: members } = memberIds.length
+    ? await academy().from('members').select('id, member_kind').in('id', memberIds)
+    : { data: [] as { id: string; member_kind: string }[] };
+
+  const kindById = new Map(
+    ((members ?? []) as { id: string; member_kind: string }[]).map((m) => [m.id, m.member_kind])
+  );
+
+  const counts: Record<string, AcademyCounts> = {};
+  for (const id of academyIds) counts[id] = { ...empty };
+
+  for (const row of rows) {
+    const bucket = counts[row.academy_id];
+    if (!bucket) continue;
+
+    if (row.status === 'pending') {
+      bucket.pending += 1;
+    } else if (row.status === 'approved') {
+      if (kindById.get(row.member_id) === 'guardian') bucket.parents += 1;
+      else bucket.players += 1;
+    }
+  }
+
+  return counts;
+}
+
+export async function fetchAcademy(academyId: string): Promise<AcademyRow | null> {
+  const { data } = await academy()
+    .from('academies')
+    .select('id, pitch_owner_id, name, description, city, logo_url, cover_url, is_active, created_at')
+    .eq('id', academyId)
+    .maybeSingle();
+
+  return (data as AcademyRow) ?? null;
+}
+
 export async function respondToEnrolment(enrolmentId: string, approve: boolean) {
   return academy()
     .from('enrolments')

@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,6 +22,7 @@ import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useAuth } from '../../lib/auth';
 import {
+  AcademyCounts,
   AcademyRow,
   EnrolmentRow,
   OwnerPitch,
@@ -32,6 +33,7 @@ import {
   createAcademy,
   createSession,
   deleteSession,
+  fetchAcademyCounts,
   fetchEnrolments,
   fetchMyAcademies,
   fetchMyPitches,
@@ -56,6 +58,7 @@ const SUB_TABS: { key: SubTab; labelKey: string; icon: keyof typeof Ionicons.gly
 ];
 
 export default function AcademyScreen() {
+  const router = useRouter();
   const { colors } = useAppTheme();
   const { t } = useTranslation();
   const { pitchOwner } = useAuth();
@@ -74,6 +77,7 @@ export default function AcademyScreen() {
 
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [pitches, setPitches] = useState<OwnerPitch[]>([]);
+  const [academyCounts, setAcademyCounts] = useState<Record<string, AcademyCounts>>({});
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
@@ -96,6 +100,7 @@ export default function AcademyScreen() {
     setIsLoading(true);
     const rows = await fetchMyAcademies();
     setAcademies(rows);
+    fetchAcademyCounts(rows.map((row) => row.id)).then(setAcademyCounts);
 
     setSelectedId((current) => {
       const next = current && rows.some((a) => a.id === current) ? current : rows[0]?.id ?? null;
@@ -432,29 +437,63 @@ export default function AcademyScreen() {
                   {t('academy.noAcademies')}
                 </EmptyBox>
               ) : (
-                <>
-                  <Text style={styles.sectionTitle}>
-                    {t('academy.pendingTitle')} ({pending.length})
-                  </Text>
+                // Every academy this centre runs. Tapping one opens its own
+                // screen for settings, players, parents and schedule.
+                academies.map((item) => {
+                  const counts = academyCounts[item.id];
 
-                  {pending.length === 0 ? (
-                    <EmptyBox styles={styles} colors={colors}>
-                      {t('academy.noPending')}
-                    </EmptyBox>
-                  ) : (
-                    pending.map((enrolment) => (
-                      <MemberRow
-                        key={enrolment.id}
-                        styles={styles}
-                        colors={colors}
-                        enrolment={enrolment}
-                        t={t}
-                        onApprove={() => respond(enrolment.id, true)}
-                        onReject={() => respond(enrolment.id, false)}
-                      />
-                    ))
-                  )}
-                </>
+                  return (
+                    <AnimatedPressable
+                      key={item.id}
+                      pressedScale={0.98}
+                      hoverScale={1.01}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/academy-details',
+                          params: { academyId: item.id },
+                        } as any)
+                      }
+                    >
+                      <View style={styles.academyCard}>
+                        <View style={styles.academyLogo}>
+                          <Ionicons name="school" size={22} color={colors.greenLight} />
+                        </View>
+
+                        <View style={styles.academyCardInfo}>
+                          <Text style={styles.academyCardName}>{item.name}</Text>
+                          {item.city ? (
+                            <Text style={styles.academyCardCity}>{item.city}</Text>
+                          ) : null}
+
+                          <View style={styles.academyCardStats}>
+                            <Text style={styles.academyCardStat}>
+                              {t('academy.playersCount').replace(
+                                '{count}',
+                                String(counts?.players ?? 0)
+                              )}
+                            </Text>
+                            <Text style={styles.academyCardStat}>
+                              {t('academy.parentsCount').replace(
+                                '{count}',
+                                String(counts?.parents ?? 0)
+                              )}
+                            </Text>
+                            {counts?.pending ? (
+                              <Text style={styles.academyCardPending}>
+                                {t('academy.pendingCount').replace(
+                                  '{count}',
+                                  String(counts.pending)
+                                )}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </View>
+
+                        <Ionicons name="chevron-forward" size={18} color={colors.greyDark} />
+                      </View>
+                    </AnimatedPressable>
+                  );
+                })
               )}
             </>
           ) : subTab === 'players' ? (
@@ -968,6 +1007,56 @@ const makeStyles = (colors: AppColors) =>
       borderRadius: radius.lg,
       padding: spacing.md,
       marginBottom: spacing.md,
+    },
+    academyCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.lg,
+      padding: spacing.md,
+      marginBottom: 10,
+    },
+    academyLogo: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.greenSoft,
+    },
+    academyCardInfo: {
+      flex: 1,
+      minWidth: 0,
+    },
+    academyCardName: {
+      color: colors.white,
+      fontSize: scaleFont(15),
+      fontWeight: '800',
+    },
+    academyCardCity: {
+      color: colors.grey,
+      fontSize: scaleFont(12),
+      fontWeight: '600',
+      marginTop: 2,
+    },
+    academyCardStats: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: 6,
+    },
+    academyCardStat: {
+      color: colors.greyDark,
+      fontSize: scaleFont(11),
+      fontWeight: '800',
+    },
+    academyCardPending: {
+      color: colors.orange,
+      fontSize: scaleFont(11),
+      fontWeight: '800',
     },
     cardTitle: {
       color: colors.white,
