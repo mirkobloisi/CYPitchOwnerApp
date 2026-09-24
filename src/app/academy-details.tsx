@@ -1,11 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import AnimatedPressable from '../components/AnimatedPressable';
-import AnimatedSelectable from '../components/AnimatedSelectable';
-import AnimatedSwap from '../components/AnimatedSwap';
 import AppButton from '../components/AppButton';
 import AppHeader from '../components/AppHeader';
 import AvatarCropModal from '../components/AvatarCropModal';
@@ -30,14 +28,6 @@ import { useAppTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/layout';
 import { scaleFont } from '../theme/typography';
 
-type DetailTab = 'details' | 'players' | 'parents' | 'schedule';
-
-const DETAIL_TABS: { key: DetailTab; labelKey: string }[] = [
-  { key: 'details', labelKey: 'academy.tabDetails' },
-  { key: 'players', labelKey: 'academy.tabPlayers' },
-  { key: 'parents', labelKey: 'academy.tabParents' },
-  { key: 'schedule', labelKey: 'academy.tabSchedule' },
-];
 
 export default function AcademyDetailsScreen() {
   const { academyId } = useLocalSearchParams<{ academyId: string }>();
@@ -46,7 +36,6 @@ export default function AcademyDetailsScreen() {
   const { t } = useTranslation();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const [tab, setTab] = useState<DetailTab>('details');
   const [item, setItem] = useState<AcademyRow | null>(null);
   const [enrolments, setEnrolments] = useState<EnrolmentRow[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
@@ -222,132 +211,114 @@ export default function AcademyDetailsScreen() {
         <Stat styles={styles} label={t('academy.tabSchedule')} value={sessions.length} />
       </View>
 
-      <View style={styles.tabRow}>
-        {DETAIL_TABS.map((entry) => (
-          <AnimatedSelectable
-            key={entry.key}
-            active={tab === entry.key}
-            style={styles.tabChip}
-            background={[colors.card, colors.blueSoft]}
-            borderColor={[colors.border, colors.borderBlue]}
-            onPress={() => setTab(entry.key)}
-          >
-            {(progress) => (
-              <Animated.Text
-                style={[
-                  styles.tabText,
-                  {
-                    color: progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [colors.grey, colors.blueLight],
+      <Text style={styles.heading}>{t('academy.tabPlayers')}</Text>
+
+      <PeopleList
+        styles={styles}
+        colors={colors}
+        t={t}
+        people={players}
+        pending={pending.filter((row) => row.member?.member_kind === 'player')}
+        emptyText={t('academy.noPlayers')}
+        onRespond={respond}
+      />
+
+      <Text style={styles.heading}>{t('academy.tabParents')}</Text>
+
+      <PeopleList
+        styles={styles}
+        colors={colors}
+        t={t}
+        people={parents}
+        pending={pending.filter((row) => row.member?.member_kind === 'guardian')}
+        emptyText={t('academy.noParents')}
+        onRespond={respond}
+      />
+
+      <Text style={styles.heading}>{t('academy.tabSchedule')}</Text>
+
+      {sessions.length === 0 ? (
+        <EmptyBox styles={styles} colors={colors} icon="time-outline">
+          {t('academy.noSchedule')}
+        </EmptyBox>
+      ) : (
+        sessions.map((session) => {
+          const start = new Date(session.starts_at);
+
+          return (
+            <View key={session.id} style={styles.row}>
+              <View style={styles.rowIcon}>
+                <Ionicons
+                  name={session.kind === 'match' ? 'trophy-outline' : 'time-outline'}
+                  size={17}
+                  color={session.kind === 'match' ? colors.blueLight : colors.greenLight}
+                />
+              </View>
+
+              <View style={styles.rowInfo}>
+                <Text style={styles.rowTitle}>{session.title}</Text>
+                <Text style={styles.rowMeta}>
+                  {[
+                    start.toLocaleDateString(undefined, {
+                      weekday: 'short',
+                      day: 'numeric',
+                      month: 'short',
                     }),
-                  },
-                ]}
-              >
-                {t(entry.labelKey)}
-              </Animated.Text>
-            )}
-          </AnimatedSelectable>
-        ))}
+                    start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    session.location_name,
+                    session.recurrence === 'weekly'
+                      ? session.recurrence_until
+                        ? t('academy.repeatsUntil').replace(
+                            '{date}',
+                            new Date(`${session.recurrence_until}T00:00:00`).toLocaleDateString(
+                              undefined,
+                              { day: 'numeric', month: 'short' }
+                            )
+                          )
+                        : t('academy.repeatsForever')
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+              </View>
+            </View>
+          );
+        })
+      )}
+
+      <Text style={styles.heading}>{t('academy.tabDetails')}</Text>
+
+      <View style={styles.card}>
+        <Text style={styles.label}>{t('academy.namePlaceholder')}</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} />
+
+        <Text style={styles.label}>{t('academy.cityPlaceholder')}</Text>
+        <TextInput style={styles.input} value={city} onChangeText={setCity} />
+
+        <Text style={styles.label}>{t('academy.descriptionLabel')}</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={description}
+          onChangeText={setDescription}
+          multiline
+        />
+
+        {savedMessage ? <Text style={styles.savedText}>{savedMessage}</Text> : null}
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <AppButton
+          title={t('common.save')}
+          loading={isSaving}
+          disabled={!name.trim()}
+          onPress={handleSave}
+        />
+
+        <AnimatedPressable style={styles.deleteButton} onPress={handleDelete}>
+          <Ionicons name="trash-outline" size={16} color={colors.red} />
+          <Text style={styles.deleteText}>{t('academy.deleteTitle')}</Text>
+        </AnimatedPressable>
       </View>
-
-      <AnimatedSwap swapKey={tab}>
-        {tab === 'details' ? (
-          <View style={styles.card}>
-            <Text style={styles.label}>{t('academy.namePlaceholder')}</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
-
-            <Text style={styles.label}>{t('academy.cityPlaceholder')}</Text>
-            <TextInput style={styles.input} value={city} onChangeText={setCity} />
-
-            <Text style={styles.label}>{t('academy.descriptionLabel')}</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              multiline
-            />
-
-            {savedMessage ? <Text style={styles.savedText}>{savedMessage}</Text> : null}
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-            <AppButton
-              title={t('common.save')}
-              loading={isSaving}
-              disabled={!name.trim()}
-              onPress={handleSave}
-            />
-
-            <AnimatedPressable style={styles.deleteButton} onPress={handleDelete}>
-              <Ionicons name="trash-outline" size={16} color={colors.red} />
-              <Text style={styles.deleteText}>{t('academy.deleteTitle')}</Text>
-            </AnimatedPressable>
-          </View>
-        ) : tab === 'schedule' ? (
-          sessions.length === 0 ? (
-            <EmptyBox styles={styles} colors={colors} icon="time-outline">
-              {t('academy.noSchedule')}
-            </EmptyBox>
-          ) : (
-            sessions.map((session) => {
-              const start = new Date(session.starts_at);
-
-              return (
-                <View key={session.id} style={styles.row}>
-                  <View style={styles.rowIcon}>
-                    <Ionicons
-                      name={session.kind === 'match' ? 'trophy-outline' : 'time-outline'}
-                      size={17}
-                      color={session.kind === 'match' ? colors.blueLight : colors.greenLight}
-                    />
-                  </View>
-
-                  <View style={styles.rowInfo}>
-                    <Text style={styles.rowTitle}>{session.title}</Text>
-                    <Text style={styles.rowMeta}>
-                      {[
-                        start.toLocaleDateString(undefined, {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                        }),
-                        start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        session.location_name,
-                        session.recurrence === 'weekly'
-                          ? session.recurrence_until
-                            ? t('academy.repeatsUntil').replace(
-                                '{date}',
-                                new Date(
-                                  `${session.recurrence_until}T00:00:00`
-                                ).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
-                              )
-                            : t('academy.repeatsForever')
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </Text>
-                  </View>
-                </View>
-              );
-            })
-          )
-        ) : (
-          <PeopleList
-            styles={styles}
-            colors={colors}
-            t={t}
-            people={tab === 'players' ? players : parents}
-            pending={pending.filter((row) =>
-              tab === 'players'
-                ? row.member?.member_kind === 'player'
-                : row.member?.member_kind === 'guardian'
-            )}
-            emptyText={tab === 'players' ? t('academy.noPlayers') : t('academy.noParents')}
-            onRespond={respond}
-          />
-        )}
-      </AnimatedSwap>
 
       <AvatarCropModal
         visible={!!pickedLogo}
@@ -574,6 +545,15 @@ const makeStyles = (colors: AppColors) =>
       fontWeight: '800',
       marginTop: 2,
       textAlign: 'center',
+    },
+    heading: {
+      color: colors.greenLight,
+      fontSize: scaleFont(12),
+      fontWeight: '900',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: spacing.lg,
+      marginBottom: spacing.sm,
     },
     tabRow: {
       flexDirection: 'row',

@@ -21,6 +21,9 @@ import CalendarModal from '../../components/CalendarModal';
 import OptionsModal, { PickerOption } from '../../components/OptionsModal';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { Conversation, ensureStaffMember, fetchConversations } from '../../lib/academyChat';
+import { NoticeArea } from '../../lib/academyNotices';
+import { useAcademyRealtime } from '../../lib/academyRealtime';
 import { useAuth } from '../../lib/auth';
 import {
   AcademyCounts,
@@ -93,6 +96,10 @@ export default function AcademyScreen() {
   const [repeatUntil, setRepeatUntil] = useState('');
 
   // Which picker is open, if any.
+  const { unread, markRead, enrolmentsVersion, messagesVersion } = useAcademyRealtime();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [staffId, setStaffId] = useState<string | null>(null);
+
   const [picker, setPicker] = useState<'date' | 'time' | 'duration' | 'pitch' | 'until' | null>(
     null
   );
@@ -124,6 +131,23 @@ export default function AcademyScreen() {
     setEnrolments(await fetchEnrolments(academyId));
   }
 
+  const loadConversations = useCallback(async () => {
+    if (selectedId) setStaffId(await ensureStaffMember(selectedId));
+    setConversations(await fetchConversations());
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (subTab === 'messages') loadConversations();
+  }, [subTab, loadConversations, messagesVersion]);
+
+  // Opening a tab is what marks its notices read, so the bell clears as
+  // soon as the owner looks at what it was pointing to.
+  useEffect(() => {
+    if (subTab === 'players' || subTab === 'parents' || subTab === 'messages') {
+      markRead(subTab as NoticeArea);
+    }
+  }, [subTab, markRead]);
+
   const sessionKind: SessionKind = subTab === 'matches' ? 'match' : 'training';
 
   const loadSessions = useCallback(async () => {
@@ -137,6 +161,11 @@ export default function AcademyScreen() {
   useEffect(() => {
     if (subTab === 'trainings' || subTab === 'matches') loadSessions();
   }, [subTab, loadSessions]);
+
+  // A family requesting to join should show up without the owner reloading.
+  useEffect(() => {
+    if (selectedId) fetchEnrolments(selectedId).then(setEnrolments);
+  }, [selectedId, enrolmentsVersion]);
 
   useEffect(() => {
     if (pitchOwner?.id) fetchMyPitches(pitchOwner.id).then(setPitches);
@@ -300,6 +329,14 @@ export default function AcademyScreen() {
 
   const hasAcademies = academies.length > 0;
 
+  /** Notices only ever belong to these three tabs. */
+  function unreadFor(key: SubTab) {
+    if (key === 'players') return unread.players;
+    if (key === 'parents') return unread.parents;
+    if (key === 'messages') return unread.messages;
+    return 0;
+  }
+
   return (
     <Screen maxWidth={900}>
       <AppHeader title={t('academy.title')} subtitle={t('academy.subtitle')} showBack={false} />
@@ -319,19 +356,28 @@ export default function AcademyScreen() {
             onPress={() => setSubTab(tab.key)}
           >
             {(progress) => (
-              <Animated.Text
-                style={[
-                  styles.chipText,
-                  {
-                    color: progress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [colors.grey, colors.blueLight],
-                    }),
-                  },
-                ]}
-              >
-                {t(tab.labelKey)}
-              </Animated.Text>
+              <View style={styles.chipInner}>
+                <Animated.Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: progress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [colors.grey, colors.blueLight],
+                      }),
+                    },
+                  ]}
+                >
+                  {t(tab.labelKey)}
+                </Animated.Text>
+
+                {unreadFor(tab.key) > 0 ? (
+                  <View style={styles.bell}>
+                    <Ionicons name="notifications" size={9} color={colors.blackText} />
+                    <Text style={styles.bellCount}>{unreadFor(tab.key)}</Text>
+                  </View>
+                ) : null}
+              </View>
             )}
           </AnimatedSelectable>
         ))}
@@ -697,11 +743,68 @@ export default function AcademyScreen() {
               </>
             )
           ) : (
-            // Messages needs its own schema, with the parent-oversight rules
-            // we settled on. Honest placeholder rather than a mock.
-            <EmptyBox styles={styles} colors={colors} icon="chatbubbles-outline">
-              {t('academy.comingNext')}
-            </EmptyBox>
+            <>
+              <AnimatedPressable
+                style={styles.createButton}
+                hoverScale={1.02}
+                onPress={() =>
+                  router.push({
+                    pathname: '/academy-new-chat',
+                    params: { academyId: selectedId ?? undefined },
+                  } as any)
+                }
+              >
+                <Ionicons name="create-outline" size={17} color={colors.blackText} />
+                <Text style={styles.createButtonText}>{t('academyChat.newTitle')}</Text>
+              </AnimatedPressable>
+
+              {conversations.length === 0 ? (
+                <EmptyBox styles={styles} colors={colors} icon="chatbubbles-outline">
+                  {t('academyChat.noneYet')}
+                </EmptyBox>
+              ) : (
+                conversations.map((row) => (
+                  <AnimatedPressable
+                    key={row.id}
+                    pressedScale={0.98}
+                    hoverScale={1.01}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/academy-chat',
+                        params: { conversationId: row.id, asMemberId: row.for_member_id },
+                      } as any)
+                    }
+                  >
+                    <View style={styles.memberRow}>
+                      <View style={styles.memberAvatar}>
+                        <Ionicons
+                          name={row.kind === 'group' ? 'people' : 'chatbubble-ellipses'}
+                          size={17}
+                          color={colors.greenLight}
+                        />
+                      </View>
+
+                      <View style={styles.memberInfo}>
+                        <Text style={styles.memberName} numberOfLines={1}>
+                          {row.kind === 'group'
+                            ? row.title || t('academyChat.untitledGroup')
+                            : row.other_names.join(', ') || t('academyChat.unknownPerson')}
+                        </Text>
+                        <Text style={styles.memberMeta} numberOfLines={1}>
+                          {row.last_body || t('academyChat.noMessagesYet')}
+                        </Text>
+                      </View>
+
+                      {row.unread_count > 0 ? (
+                        <View style={styles.unreadDot}>
+                          <Text style={styles.unreadText}>{row.unread_count}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </AnimatedPressable>
+                ))
+              )}
+            </>
           )}
         </AnimatedSwap>
       )}
@@ -955,6 +1058,41 @@ const makeStyles = (colors: AppColors) =>
       gap: spacing.sm,
       paddingBottom: spacing.sm,
       paddingRight: spacing.sm,
+    },
+    chipInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    // A bell rather than a plain dot: it says what kind of thing is waiting,
+    // not merely that something is.
+    bell: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      paddingHorizontal: 5,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: colors.greenLight,
+    },
+    bellCount: {
+      color: colors.blackText,
+      fontSize: 9,
+      fontWeight: '900',
+    },
+    unreadDot: {
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 5,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.greenLight,
+    },
+    unreadText: {
+      color: colors.blackText,
+      fontSize: 11,
+      fontWeight: '900',
     },
     subTabChip: {
       paddingHorizontal: spacing.md,
