@@ -22,6 +22,8 @@ export type AcademyMember = {
   date_of_birth: string | null;
   avatar_url: string | null;
   guardian_id: string | null;
+  /** guardian = a parent; player = a child or a self-managing 14+ teenager. */
+  member_kind: 'guardian' | 'player';
 };
 
 export type EnrolmentRow = {
@@ -95,7 +97,7 @@ export async function fetchEnrolments(academyId: string): Promise<EnrolmentRow[]
 
   const { data: members } = await academy()
     .from('members')
-    .select('id, full_name, date_of_birth, avatar_url, guardian_id')
+    .select('id, full_name, date_of_birth, avatar_url, guardian_id, member_kind')
     .in('id', memberIds);
 
   const byId = new Map<string, AcademyMember>(
