@@ -87,6 +87,45 @@ function formatHourLabel(hour: number) {
   return `${hour.toString().padStart(2, '0')}:00`;
 }
 
+/**
+ * Chip colours for the month grid, which is a light panel — the dark-theme
+ * accents used elsewhere are unreadable on white, so this is its own scale:
+ * a soft fill, a saturated left bar, and text dark enough to read at 10px.
+ */
+function calendarEventMeta(event: AgendaEvent, t: (path: string) => string) {
+  const palette = {
+    green: { fill: '#DCF6E3', bar: '#2FA95C', text: '#14743A' },
+    blue: { fill: '#DCEBFB', bar: '#2F80ED', text: '#14588F' },
+    orange: { fill: '#FDECD8', bar: '#E58A2B', text: '#8A5115' },
+    grey: { fill: '#EDEFF3', bar: '#98A2B3', text: '#5A6472' },
+    red: { fill: '#FBE0DE', bar: '#DC4436', text: '#8F2318' },
+  };
+
+  if (event.kind === 'academy') {
+    return { ...palette.green, label: event.session.title };
+  }
+
+  if (event.kind === 'block') {
+    return event.block.block_type === 'external_booking'
+      ? { ...palette.blue, label: event.block.reference || t('agenda.externalBookingDefault') }
+      : { ...palette.grey, label: event.block.reason || t('agenda.blockedDefault') };
+  }
+
+  const byStatus: Record<MatchStatus, keyof typeof palette> = {
+    open: 'orange',
+    almost_full: 'orange',
+    fully_paid: 'orange',
+    confirmed: 'green',
+    completed: 'blue',
+    cancelled: 'red',
+  };
+
+  return {
+    ...palette[byStatus[event.match.status]],
+    label: t('agenda.matchLabel'),
+  };
+}
+
 function eventStatusMeta(
   event: AgendaEvent,
   colors: AppColors,
@@ -576,12 +615,12 @@ export default function AgendaScreen() {
           <ActivityIndicator color={colors.greenLight} />
         </View>
       ) : viewMode === 'month' ? (
-        <>
+        <View style={styles.calendarPanel}>
           <View style={styles.weekdayRow}>
-            {WEEKDAY_LABELS.map((label) => (
-              <Text key={label} style={styles.weekdayLabel}>
-                {label}
-              </Text>
+            {WEEKDAY_LABELS.map((label, index) => (
+              <View key={`${label}-${index}`} style={styles.weekdayCell}>
+                <Text style={styles.weekdayLabel}>{label}</Text>
+              </View>
             ))}
           </View>
 
@@ -590,42 +629,64 @@ export default function AgendaScreen() {
               const dayEvents = eventsByDay.get(day.toDateString()) ?? [];
               const inMonth = day.getMonth() === visibleMonth.getMonth();
               const isSelected = isSameDay(day, selectedDate);
+              const isCurrentDay = isSameDay(day, new Date());
+
+              // Three chips is what fits before the cell needs to scroll;
+              // the rest are summarised so the row height stays even.
+              const shown = dayEvents.slice(0, 3);
+              const overflow = dayEvents.length - shown.length;
 
               return (
                 <AnimatedSelectable
                   key={day.toISOString()}
                   active={isSelected}
                   style={[styles.dayCell, !inMonth && styles.dayCellOutside]}
-                  background={['transparent', colors.greenSoft]}
-                  borderColor={['transparent', colors.borderGreen]}
+                  background={[colors.calendarSurface, '#EAF3FF']}
                   onPress={() => setSelectedDate(day)}
                 >
-                  <Text
-                    style={[
-                      styles.dayNumber,
-                      !inMonth && styles.dayNumberOutside,
-                      isSelected && styles.dayNumberSelected,
-                    ]}
-                  >
-                    {day.getDate()}
-                  </Text>
-
-                  <View style={styles.dayDots}>
-                    {dayEvents.slice(0, 3).map((event) => {
-                      const meta = eventStatusMeta(event, colors, t);
-                      return (
-                        <View
-                          key={event.id}
-                          style={[styles.dayDot, { backgroundColor: meta.color }]}
-                        />
-                      );
-                    })}
+                  <View style={styles.dayNumberRow}>
+                    <View style={[styles.dayNumberWrap, isCurrentDay && styles.dayNumberToday]}>
+                      <Text
+                        style={[
+                          styles.dayNumber,
+                          !inMonth && styles.dayNumberOutside,
+                          isCurrentDay && styles.dayNumberTodayText,
+                        ]}
+                      >
+                        {day.getDate()}
+                      </Text>
+                    </View>
                   </View>
+
+                  {shown.map((event) => {
+                    const meta = calendarEventMeta(event, t);
+
+                    return (
+                      <View
+                        key={event.id}
+                        style={[styles.eventChip, { backgroundColor: meta.fill }]}
+                      >
+                        <View style={[styles.eventChipBar, { backgroundColor: meta.bar }]} />
+                        <Text
+                          style={[styles.eventChipText, { color: meta.text }]}
+                          numberOfLines={1}
+                        >
+                          {formatTime(event.startsAt)} {meta.label}
+                        </Text>
+                      </View>
+                    );
+                  })}
+
+                  {overflow > 0 ? (
+                    <Text style={styles.moreText}>
+                      {t('agenda.moreEvents').replace('{count}', String(overflow))}
+                    </Text>
+                  ) : null}
                 </AnimatedSelectable>
               );
             })}
           </View>
-        </>
+        </View>
       ) : viewMode === 'week' ? (
         <View style={styles.weekWrap}>
           <View style={styles.weekHeaderRow}>
@@ -962,16 +1023,31 @@ const makeStyles = (colors: AppColors) =>
       fontSize: scaleFont(16),
       fontWeight: '900',
     },
+    calendarPanel: {
+      backgroundColor: colors.calendarSurface,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.calendarBorder,
+      overflow: 'hidden',
+      marginBottom: spacing.md,
+    },
     weekdayRow: {
       flexDirection: 'row',
-      marginBottom: spacing.xs,
+      backgroundColor: colors.calendarSurfaceMuted,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.calendarBorder,
+    },
+    weekdayCell: {
+      width: `${100 / 7}%`,
+      paddingVertical: 9,
+      alignItems: 'center',
     },
     weekdayLabel: {
-      flex: 1,
-      textAlign: 'center',
-      color: colors.greyDark,
+      color: colors.calendarMuted,
       fontSize: scaleFont(10),
       fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
     },
     loadingBox: {
       paddingVertical: spacing.xxl,
@@ -981,43 +1057,72 @@ const makeStyles = (colors: AppColors) =>
       flexDirection: 'row',
       flexWrap: 'wrap',
     },
+    // A calendar cell is taller than it is wide so bookings can be listed
+    // inside it, the way a desktop month view works.
     dayCell: {
-      width: '14.28%',
-      aspectRatio: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: radius.sm,
-      marginBottom: 2,
-      // Always present but transparent until selected, so fading the colour
-      // in can't shift the grid by a pixel.
-      borderWidth: 1,
-      borderColor: 'transparent',
+      width: `${100 / 7}%`,
+      minHeight: 104,
+      paddingHorizontal: 4,
+      paddingBottom: 4,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.calendarBorder,
     },
     dayCellOutside: {
-      opacity: 0.35,
+      backgroundColor: colors.calendarSurfaceMuted,
+    },
+    dayNumberRow: {
+      alignItems: 'flex-start',
+      paddingTop: 5,
+      paddingBottom: 3,
+    },
+    dayNumberWrap: {
+      minWidth: 21,
+      height: 21,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    dayNumberToday: {
+      backgroundColor: colors.blue,
     },
     dayNumber: {
-      color: colors.white,
-      fontSize: scaleFont(13),
-      fontWeight: '700',
+      color: colors.calendarText,
+      fontSize: scaleFont(12),
+      fontWeight: '800',
     },
     dayNumberOutside: {
-      color: colors.greyDark,
+      color: colors.calendarMuted,
     },
-    dayNumberSelected: {
-      color: colors.greenLight,
-      fontWeight: '900',
+    dayNumberTodayText: {
+      color: '#FFFFFF',
     },
-    dayDots: {
+    eventChip: {
       flexDirection: 'row',
-      gap: 2,
-      marginTop: 3,
-      height: 6,
+      alignItems: 'center',
+      borderRadius: 4,
+      overflow: 'hidden',
+      marginBottom: 3,
+      paddingRight: 4,
     },
-    dayDot: {
-      width: 5,
-      height: 5,
-      borderRadius: 3,
+    eventChipBar: {
+      width: 3,
+      alignSelf: 'stretch',
+      minHeight: 16,
+      marginRight: 4,
+    },
+    eventChipText: {
+      flex: 1,
+      fontSize: scaleFont(9),
+      fontWeight: '800',
+      paddingVertical: 3,
+    },
+    moreText: {
+      color: colors.calendarMuted,
+      fontSize: scaleFont(9),
+      fontWeight: '800',
+      paddingLeft: 3,
     },
     weekWrap: {
       marginBottom: spacing.sm,

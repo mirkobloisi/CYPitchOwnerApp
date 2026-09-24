@@ -53,6 +53,15 @@ export const darkColors = {
   neutralSoft: 'rgba(255,255,255,0.06)',
 
   backgroundGradient: ['#020706', '#031018', '#020706'] as readonly [string, string, string],
+
+  // The agenda's month grid is a light panel sitting on the dark chrome, the
+  // way desktop calendars are: a month of coloured bookings is far easier to
+  // scan on white. These stay light in both themes on purpose.
+  calendarSurface: '#FFFFFF',
+  calendarSurfaceMuted: '#F7F8FA',
+  calendarBorder: '#E4E8EE',
+  calendarText: '#1B2430',
+  calendarMuted: '#8A94A6',
 };
 
 // Light palette mirrors every role in the dark palette, tuned for contrast on a light background.
@@ -109,6 +118,12 @@ export const lightColors: typeof darkColors = {
   neutralSoft: 'rgba(6, 16, 10, 0.05)',
 
   backgroundGradient: ['#F4F6F3', '#EAF4FB', '#F4F6F3'] as readonly [string, string, string],
+
+  calendarSurface: '#FFFFFF',
+  calendarSurfaceMuted: '#F7F8FA',
+  calendarBorder: '#E4E8EE',
+  calendarText: '#1B2430',
+  calendarMuted: '#8A94A6',
 };
 
 export type AppColors = typeof darkColors;
