@@ -82,3 +82,40 @@ export async function cropAndUploadAvatar(
   const { data } = supabase.storage.from('avatars').getPublicUrl(path);
   return data.publicUrl;
 }
+
+/**
+ * Same crop/resize/compress pipeline into the academy's own bucket, under its
+ * id — which is what the storage policy checks, so only that academy's owner
+ * can write there.
+ *
+ * Public, unlike academy member avatars: a crest is branding, not a
+ * photograph of a child, so it needs no signed URL.
+ */
+export async function cropAndUploadAcademyLogo(
+  academyId: string,
+  image: PickedAvatarImage,
+  crop: { originX: number; originY: number; size: number }
+): Promise<string> {
+  const manipulated = await ImageManipulator.manipulateAsync(
+    image.uri,
+    [
+      { crop: { originX: crop.originX, originY: crop.originY, width: crop.size, height: crop.size } },
+      { resize: { width: 512, height: 512 } },
+    ],
+    { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
+  );
+
+  const response = await fetch(manipulated.uri);
+  const arrayBuffer = await response.arrayBuffer();
+
+  const path = `${academyId}/logo-${Date.now()}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('academy-images')
+    .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from('academy-images').getPublicUrl(path);
+  return data.publicUrl;
+}

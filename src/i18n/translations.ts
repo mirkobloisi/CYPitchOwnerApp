@@ -53,6 +53,8 @@ export const translations = {
       descriptionLabel: 'Description',
       saved: 'Saved.',
       notFound: 'This academy is no longer available.',
+      logoHint: 'Tap the crest to set the picture parents see.',
+      logoFailed: 'The picture could not be uploaded. Please try again.',
       deleteTitle: 'Delete academy',
       deleteWarning:
         'This removes the academy along with its enrolments and its whole schedule. It cannot be undone.',
@@ -587,6 +589,8 @@ export const translations = {
       descriptionLabel: 'Περιγραφή',
       saved: 'Αποθηκεύτηκε.',
       notFound: 'Αυτή η ακαδημία δεν είναι πλέον διαθέσιμη.',
+      logoHint: 'Πατήστε το έμβλημα για να ορίσετε την εικόνα που βλέπουν οι γονείς.',
+      logoFailed: 'Η εικόνα δεν ανέβηκε. Δοκιμάστε ξανά.',
       deleteTitle: 'Διαγραφή ακαδημίας',
       deleteWarning:
         'Διαγράφει την ακαδημία μαζί με τις εγγραφές και όλο το πρόγραμμά της. Δεν αναιρείται.',
@@ -1124,6 +1128,8 @@ export const translations = {
       descriptionLabel: 'Описание',
       saved: 'Сохранено.',
       notFound: 'Эта академия больше недоступна.',
+      logoHint: 'Нажмите на эмблему, чтобы выбрать изображение, которое видят родители.',
+      logoFailed: 'Не удалось загрузить изображение. Попробуйте ещё раз.',
       deleteTitle: 'Удалить академию',
       deleteWarning:
         'Академия будет удалена вместе с записями и всем расписанием. Действие необратимо.',

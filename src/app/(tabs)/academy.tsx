@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -455,9 +456,17 @@ export default function AcademyScreen() {
                       }
                     >
                       <View style={styles.academyCard}>
-                        <View style={styles.academyLogo}>
-                          <Ionicons name="school" size={22} color={colors.greenLight} />
-                        </View>
+                        {item.logo_url ? (
+                          <Image
+                            source={{ uri: item.logo_url }}
+                            style={styles.academyLogo}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.academyLogo, styles.academyLogoPlaceholder]}>
+                            <Ionicons name="school" size={22} color={colors.greenLight} />
+                          </View>
+                        )}
 
                         <View style={styles.academyCardInfo}>
                           <Text style={styles.academyCardName}>{item.name}</Text>
@@ -1022,7 +1031,9 @@ const makeStyles = (colors: AppColors) =>
     academyLogo: {
       width: 46,
       height: 46,
-      borderRadius: 23,
+      borderRadius: radius.md,
+    },
+    academyLogoPlaceholder: {
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.greenSoft,

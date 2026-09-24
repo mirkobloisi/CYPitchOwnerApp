@@ -1,13 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Image, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import AnimatedPressable from '../components/AnimatedPressable';
 import AnimatedSelectable from '../components/AnimatedSelectable';
 import AnimatedSwap from '../components/AnimatedSwap';
 import AppButton from '../components/AppButton';
 import AppHeader from '../components/AppHeader';
+import AvatarCropModal from '../components/AvatarCropModal';
+import AvatarPickerTrigger from '../components/AvatarPickerTrigger';
 import Screen from '../components/Screen';
 import { useTranslation } from '../i18n/LanguageContext';
 import {
@@ -22,6 +24,7 @@ import {
   respondToEnrolment,
   updateAcademy,
 } from '../lib/academyData';
+import { PickedAvatarImage, cropAndUploadAcademyLogo } from '../lib/avatarUpload';
 import { AppColors } from '../theme/palettes';
 import { useAppTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/layout';
@@ -55,6 +58,8 @@ export default function AcademyDetailsScreen() {
   const [description, setDescription] = useState('');
   const [savedMessage, setSavedMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [pickedLogo, setPickedLogo] = useState<PickedAvatarImage | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const load = useCallback(async () => {
     if (!academyId) return;
@@ -131,6 +136,24 @@ export default function AcademyDetailsScreen() {
     load();
   }
 
+  async function handleLogoCropped(crop: { originX: number; originY: number; size: number }) {
+    if (!pickedLogo || !academyId) return;
+
+    setIsUploadingLogo(true);
+    setErrorMessage('');
+
+    try {
+      const url = await cropAndUploadAcademyLogo(academyId, pickedLogo, crop);
+      await updateAcademy(academyId, { logo_url: url });
+      setPickedLogo(null);
+      load();
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : t('academy.logoFailed'));
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  }
+
   const approved = enrolments.filter((row) => row.status === 'approved');
   const pending = enrolments.filter((row) => row.status === 'pending');
   const players = approved.filter((row) => row.member?.member_kind === 'player');
@@ -159,6 +182,38 @@ export default function AcademyDetailsScreen() {
   return (
     <Screen maxWidth={900}>
       <AppHeader title={item.name} subtitle={item.city ?? undefined} />
+
+      {/* The crest represents the academy wherever it appears — the list
+          here, and the parents' app when they browse. */}
+      <View style={styles.logoRow}>
+        <AvatarPickerTrigger
+          disabled={isUploadingLogo}
+          onPicked={setPickedLogo}
+          onError={(error) =>
+            setErrorMessage(error instanceof Error ? error.message : t('academy.logoFailed'))
+          }
+        >
+          <View style={styles.logoWrap}>
+            {item.logo_url ? (
+              <Image source={{ uri: item.logo_url }} style={styles.logo} resizeMode="cover" />
+            ) : (
+              <View style={[styles.logo, styles.logoPlaceholder]}>
+                <Ionicons name="school" size={28} color={colors.greenLight} />
+              </View>
+            )}
+
+            <View style={styles.logoBadge}>
+              {isUploadingLogo ? (
+                <ActivityIndicator color={colors.blackText} size="small" />
+              ) : (
+                <Ionicons name="camera" size={13} color={colors.blackText} />
+              )}
+            </View>
+          </View>
+        </AvatarPickerTrigger>
+
+        <Text style={styles.logoHint}>{t('academy.logoHint')}</Text>
+      </View>
 
       <View style={styles.statRow}>
         <Stat styles={styles} label={t('academy.tabPlayers')} value={players.length} />
@@ -293,6 +348,15 @@ export default function AcademyDetailsScreen() {
           />
         )}
       </AnimatedSwap>
+
+      <AvatarCropModal
+        visible={!!pickedLogo}
+        imageUri={pickedLogo?.uri ?? null}
+        imageWidth={pickedLogo?.width ?? 0}
+        imageHeight={pickedLogo?.height ?? 0}
+        onCancel={() => setPickedLogo(null)}
+        onConfirm={handleLogoCropped}
+      />
     </Screen>
   );
 }
@@ -442,6 +506,48 @@ const makeStyles = (colors: AppColors) =>
   StyleSheet.create({
     loading: {
       marginTop: spacing.xl,
+    },
+    logoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginBottom: spacing.md,
+    },
+    logoWrap: {
+      width: 72,
+      height: 72,
+    },
+    logo: {
+      width: 72,
+      height: 72,
+      borderRadius: radius.lg,
+    },
+    logoPlaceholder: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.greenSoft,
+      borderWidth: 1,
+      borderColor: colors.borderGreen,
+    },
+    logoBadge: {
+      position: 'absolute',
+      right: -4,
+      bottom: -4,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.greenLight,
+      borderWidth: 2,
+      borderColor: colors.background,
+    },
+    logoHint: {
+      flex: 1,
+      color: colors.grey,
+      fontSize: scaleFont(12),
+      fontWeight: '600',
+      lineHeight: 17,
     },
     statRow: {
       flexDirection: 'row',

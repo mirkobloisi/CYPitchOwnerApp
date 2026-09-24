@@ -63,7 +63,9 @@ export async function createAcademy(input: {
 
 export async function updateAcademy(
   academyId: string,
-  fields: Partial<Pick<AcademyRow, 'name' | 'city' | 'description' | 'is_active'>>
+  fields: Partial<
+    Pick<AcademyRow, 'name' | 'city' | 'description' | 'is_active' | 'logo_url' | 'cover_url'>
+  >
 ) {
   return academy()
     .from('academies')
