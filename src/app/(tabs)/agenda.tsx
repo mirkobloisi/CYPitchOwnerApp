@@ -10,7 +10,13 @@ import AppHeader from '../../components/AppHeader';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useAuth } from '../../lib/auth';
-import { fetchAgendaRange, MatchRow, MatchStatus, PitchBlockRow } from '../../lib/pitchData';
+import {
+  AcademySessionOccurrence,
+  fetchAgendaRange,
+  MatchRow,
+  MatchStatus,
+  PitchBlockRow,
+} from '../../lib/pitchData';
 import { isPastDay } from '../../lib/slots';
 import { useBreakpoint, WIDE_CONTENT_MAX_WIDTH } from '../../theme/breakpoints';
 import { AppColors } from '../../theme/palettes';
@@ -20,7 +26,14 @@ import { scaleFont } from '../../theme/typography';
 
 type AgendaEvent =
   | { kind: 'match'; id: string; startsAt: Date; endsAt: Date; match: MatchRow }
-  | { kind: 'block'; id: string; startsAt: Date; endsAt: Date; block: PitchBlockRow };
+  | { kind: 'block'; id: string; startsAt: Date; endsAt: Date; block: PitchBlockRow }
+  | {
+      kind: 'academy';
+      id: string;
+      startsAt: Date;
+      endsAt: Date;
+      session: AcademySessionOccurrence;
+    };
 
 type ViewMode = 'week' | 'month' | 'list';
 
@@ -86,6 +99,14 @@ function eventStatusMeta(
     return { label: event.block.reason || t('agenda.blockedDefault'), color: colors.greyDark, background: colors.neutralSoft };
   }
 
+  if (event.kind === 'academy') {
+    return {
+      label: event.session.title,
+      color: colors.neonLight,
+      background: colors.neonSoft,
+    };
+  }
+
   const statusMeta: Record<MatchStatus, { label: string; color: string; background: string }> = {
     open: { label: t('agenda.statusPendingConfirmation'), color: colors.orange, background: colors.orangeSoft },
     almost_full: { label: t('agenda.statusPendingConfirmation'), color: colors.orange, background: colors.orangeSoft },
@@ -135,7 +156,11 @@ export default function AgendaScreen() {
       const rangeEnd = new Date(rangeStart);
       rangeEnd.setDate(rangeEnd.getDate() + 42);
 
-      const { matches, blocks } = await fetchAgendaRange(activePitch.id, rangeStart, rangeEnd);
+      const { matches, blocks, academySessions } = await fetchAgendaRange(
+        activePitch.id,
+        rangeStart,
+        rangeEnd
+      );
 
       // A cancelled match frees up its slot everywhere else (the User App's
       // booking list drops it, and get_pitch_busy_ranges stops counting it as
@@ -159,7 +184,21 @@ export default function AgendaScreen() {
         block,
       }));
 
-      setEvents([...matchEvents, ...blockEvents]);
+      // A cancelled session frees its slot in get_pitch_busy_ranges, so the
+      // calendar drops it too rather than showing a dead entry.
+      const academyEvents: AgendaEvent[] = academySessions
+        .filter((session) => !session.is_cancelled)
+        .map((session) => ({
+          kind: 'academy' as const,
+          // A weekly session is one row, so its occurrences share an id —
+          // the start time makes each one distinct for React's keys.
+          id: `${session.id}:${session.starts_at}`,
+          startsAt: new Date(session.starts_at),
+          endsAt: new Date(session.ends_at),
+          session,
+        }));
+
+      setEvents([...matchEvents, ...blockEvents, ...academyEvents]);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : t('agenda.couldNotLoad'));
     } finally {
@@ -229,6 +268,9 @@ export default function AgendaScreen() {
 
       if (event.kind === 'match') {
         confirmedMatches += 1;
+      } else if (event.kind === 'academy') {
+        // An academy training or match occupies the pitch just as a block does.
+        unavailable += 1;
       } else if (event.block.block_type === 'external_booking') {
         externalBookings += 1;
       } else {
@@ -340,6 +382,10 @@ export default function AgendaScreen() {
       router.push({ pathname: '/booking-details', params: { matchId: event.match.id } });
       return;
     }
+
+    // Academy sessions are edited in the Academy tab, not here — this screen
+    // only manages pitch_blocks rows.
+    if (event.kind === 'academy') return;
 
     // External bookings and blocked slots are both pitch_blocks rows, and both
     // are managed (moved, edited, deleted) on the same screen.

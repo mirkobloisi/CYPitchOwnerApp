@@ -99,11 +99,34 @@ export async function fetchAgendaRange(pitchId: string, rangeStart: Date, rangeE
   if (matchesResult.error) throw matchesResult.error;
   if (blocksResult.error) throw blocksResult.error;
 
+  // Academy trainings and matches on this pitch, weekly repeats already
+  // expanded. Kept out of the Promise.all above and tolerated on failure: an
+  // owner who runs no academy should still get their agenda.
+  const academyResult = await supabase.schema('academy').rpc('pitch_sessions_in_range', {
+    pitch_id_input: pitchId,
+    range_start: startIso,
+    range_end: endIso,
+  });
+
   return {
     matches: (matchesResult.data ?? []) as MatchRow[],
     blocks: (blocksResult.data ?? []) as PitchBlockRow[],
+    academySessions: (academyResult.data ?? []) as AcademySessionOccurrence[],
   };
 }
+
+export type AcademySessionOccurrence = {
+  id: string;
+  academy_id: string;
+  academy_name: string;
+  kind: 'training' | 'match';
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  opponent: string | null;
+  is_cancelled: boolean;
+  is_recurring: boolean;
+};
 
 export async function fetchAvailability(pitchId: string) {
   const { data, error } = await withAbortableTimeout(

@@ -37,6 +37,7 @@ import {
   fetchMyPitches,
   fetchSessions,
   respondToEnrolment,
+  updateSession,
 } from '../../lib/academyData';
 import { AppColors } from '../../theme/palettes';
 import { useAppTheme } from '../../theme/ThemeContext';
@@ -77,7 +78,9 @@ export default function AcademyScreen() {
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionDate, setSessionDate] = useState('');
   const [sessionTime, setSessionTime] = useState('');
-  const [sessionDuration, setSessionDuration] = useState(90);
+  // 60 minutes covers most academy trainings; the rest are a tap away.
+  const [sessionDuration, setSessionDuration] = useState(60);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [sessionPitchId, setSessionPitchId] = useState<string | null>(null);
   const [sessionOpponent, setSessionOpponent] = useState('');
   const [repeatWeekly, setRepeatWeekly] = useState(false);
@@ -135,6 +138,43 @@ export default function AcademyScreen() {
 
   const selectedPitch = pitches.find((pitch) => pitch.id === sessionPitchId) ?? null;
 
+  function resetSessionForm() {
+    setEditingSessionId(null);
+    setSessionTitle('');
+    setSessionDate('');
+    setSessionTime('');
+    setSessionDuration(60);
+    setSessionPitchId(null);
+    setSessionOpponent('');
+    setRepeatWeekly(false);
+    setRepeatForever(true);
+    setRepeatUntil('');
+    setErrorMessage('');
+  }
+
+  /** Loads an existing session into the same form used to create one. */
+  function openSessionForEdit(session: SessionRow) {
+    const start = new Date(session.starts_at);
+    const end = new Date(session.ends_at);
+
+    setEditingSessionId(session.id);
+    setSessionTitle(session.title);
+    setSessionDate(
+      `${start.getFullYear()}-${`${start.getMonth() + 1}`.padStart(2, '0')}-${`${start.getDate()}`.padStart(2, '0')}`
+    );
+    setSessionTime(
+      `${`${start.getHours()}`.padStart(2, '0')}:${`${start.getMinutes()}`.padStart(2, '0')}`
+    );
+    setSessionDuration(Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)));
+    setSessionPitchId(session.pitch_id);
+    setSessionOpponent(session.opponent ?? '');
+    setRepeatWeekly(session.recurrence === 'weekly');
+    setRepeatForever(session.recurrence === 'weekly' && !session.recurrence_until);
+    setRepeatUntil(session.recurrence_until ?? '');
+    setErrorMessage('');
+    setShowSessionForm(true);
+  }
+
   async function handleCreateSession() {
     if (!selectedId || isCreating) return;
 
@@ -154,19 +194,22 @@ export default function AcademyScreen() {
     setIsCreating(true);
     setErrorMessage('');
 
-    const { error } = await createSession({
-      academyId: selectedId,
-      kind: sessionKind,
+    const payload = {
       title: sessionTitle,
       startsAt: startsAt.toISOString(),
       endsAt: endsAt.toISOString(),
+      pitchId: sessionPitchId,
       // The pitch carries its own Maps link, so the owner never re-enters one.
       locationName: selectedPitch?.name ?? null,
       mapsUrl: selectedPitch?.maps_url ?? null,
       opponent: sessionKind === 'match' ? sessionOpponent : null,
-      recurrence: repeatWeekly ? 'weekly' : 'none',
+      recurrence: (repeatWeekly ? 'weekly' : 'none') as 'weekly' | 'none',
       recurrenceUntil: repeatWeekly && !repeatForever ? repeatUntil : null,
-    });
+    };
+
+    const { error } = editingSessionId
+      ? await updateSession(editingSessionId, payload)
+      : await createSession({ academyId: selectedId, kind: sessionKind, ...payload });
 
     setIsCreating(false);
 
@@ -175,14 +218,7 @@ export default function AcademyScreen() {
       return;
     }
 
-    setSessionTitle('');
-    setSessionDate('');
-    setSessionTime('');
-    setSessionPitchId(null);
-    setSessionOpponent('');
-    setRepeatWeekly(false);
-    setRepeatForever(true);
-    setRepeatUntil('');
+    resetSessionForm();
     setShowSessionForm(false);
     loadSessions();
   }
@@ -463,9 +499,11 @@ export default function AcademyScreen() {
                 {showSessionForm ? (
                   <View style={styles.card}>
                     <Text style={styles.cardTitle}>
-                      {sessionKind === 'match'
-                        ? t('academy.newMatchTitle')
-                        : t('academy.newTrainingTitle')}
+                      {editingSessionId
+                        ? t('academy.editSessionTitle')
+                        : sessionKind === 'match'
+                          ? t('academy.newMatchTitle')
+                          : t('academy.newTrainingTitle')}
                     </Text>
 
                     <TextInput
@@ -580,12 +618,14 @@ export default function AcademyScreen() {
                         fullWidth={false}
                         style={styles.formButton}
                         onPress={() => {
+                          resetSessionForm();
                           setShowSessionForm(false);
-                          setErrorMessage('');
                         }}
                       />
                       <AppButton
-                        title={t('academy.scheduleAction')}
+                        title={
+                          editingSessionId ? t('common.save') : t('academy.scheduleAction')
+                        }
                         loading={isCreating}
                         disabled={!sessionTitle.trim() || !sessionDate || !sessionTime}
                         fullWidth={false}
@@ -598,7 +638,10 @@ export default function AcademyScreen() {
                   <AnimatedPressable
                     style={styles.createButton}
                     hoverScale={1.02}
-                    onPress={() => setShowSessionForm(true)}
+                    onPress={() => {
+                      resetSessionForm();
+                      setShowSessionForm(true);
+                    }}
                   >
                     <Ionicons name="add" size={18} color={colors.blackText} />
                     <Text style={styles.createButtonText}>
@@ -627,6 +670,7 @@ export default function AcademyScreen() {
                       colors={colors}
                       session={session}
                       t={t}
+                      onOpen={() => openSessionForEdit(session)}
                       onToggleCancel={async () => {
                         await cancelSession(session.id, !session.is_cancelled);
                         loadSessions();
@@ -757,6 +801,7 @@ function SessionRowView({
   colors,
   session,
   t,
+  onOpen,
   onToggleCancel,
   onDelete,
 }: {
@@ -764,6 +809,7 @@ function SessionRowView({
   colors: AppColors;
   session: SessionRow;
   t: (key: string) => string;
+  onOpen: () => void;
   onToggleCancel: () => void;
   onDelete: () => void;
 }) {
@@ -789,7 +835,9 @@ function SessionRowView({
         />
       </View>
 
-      <View style={styles.memberInfo}>
+      {/* The row opens the session for editing; the two buttons at the end
+          keep their own actions. */}
+      <AnimatedPressable style={styles.memberInfo} onPress={onOpen}>
         <Text style={styles.memberName}>
           {session.title}
           {session.opponent ? ` · ${session.opponent}` : ''}
@@ -814,7 +862,7 @@ function SessionRowView({
             .filter(Boolean)
             .join(' • ')}
         </Text>
-      </View>
+      </AnimatedPressable>
 
       <AnimatedPressable style={styles.rejectButton} onPress={onToggleCancel}>
         <Ionicons

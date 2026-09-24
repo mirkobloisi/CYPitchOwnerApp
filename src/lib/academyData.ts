@@ -156,10 +156,12 @@ export type SessionRow = {
   recurrence: 'none' | 'weekly';
   /** Null with recurrence 'weekly' means it repeats indefinitely. */
   recurrence_until: string | null;
+  /** Set when held on one of the owner's pitches, which makes it block bookings. */
+  pitch_id: string | null;
 };
 
 const SESSION_COLUMNS =
-  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence, recurrence_until';
+  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence, recurrence_until, pitch_id';
 
 export async function fetchSessions(
   academyId: string,
@@ -179,25 +181,29 @@ export async function fetchSessions(
  * One row per session, carrying its repeat rule — not one row per week.
  * A weekly session with no end date repeats indefinitely.
  */
-export async function createSession(input: {
+export type SessionInput = {
   academyId: string;
   kind: SessionKind;
   title: string;
   startsAt: string;
   endsAt: string;
+  pitchId?: string | null;
   locationName?: string | null;
   mapsUrl?: string | null;
   opponent?: string | null;
   notes?: string | null;
   recurrence?: 'none' | 'weekly';
   recurrenceUntil?: string | null;
-}) {
+};
+
+export async function createSession(input: SessionInput) {
   return academy().rpc('create_session', {
     target_academy_id: input.academyId,
     session_kind: input.kind,
     session_title: input.title.trim(),
     session_starts_at: input.startsAt,
     session_ends_at: input.endsAt,
+    session_pitch_id: input.pitchId || null,
     location_name: input.locationName?.trim() || null,
     maps_url: input.mapsUrl?.trim() || null,
     opponent: input.opponent?.trim() || null,
@@ -205,6 +211,25 @@ export async function createSession(input: {
     recurrence: input.recurrence ?? 'none',
     recurrence_until: input.recurrenceUntil || null,
   });
+}
+
+export async function updateSession(sessionId: string, input: Omit<SessionInput, 'academyId' | 'kind'>) {
+  return academy()
+    .from('sessions')
+    .update({
+      title: input.title.trim(),
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      pitch_id: input.pitchId || null,
+      location_name: input.locationName?.trim() || null,
+      maps_url: input.mapsUrl?.trim() || null,
+      opponent: input.opponent?.trim() || null,
+      notes: input.notes?.trim() || null,
+      recurrence: input.recurrence ?? 'none',
+      recurrence_until: input.recurrenceUntil || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', sessionId);
 }
 
 export async function cancelSession(sessionId: string, cancelled: boolean) {
