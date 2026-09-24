@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -22,10 +22,16 @@ import { useAuth } from '../../lib/auth';
 import {
   AcademyRow,
   EnrolmentRow,
+  SessionKind,
+  SessionRow,
   ageFromDateOfBirth,
+  cancelSession,
   createAcademy,
+  createSessions,
+  deleteSession,
   fetchEnrolments,
   fetchMyAcademies,
+  fetchSessions,
   respondToEnrolment,
 } from '../../lib/academyData';
 import { AppColors } from '../../theme/palettes';
@@ -61,6 +67,18 @@ export default function AcademyScreen() {
   const [newCity, setNewCity] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState('');
+  const [sessionDate, setSessionDate] = useState('');
+  const [sessionTime, setSessionTime] = useState('');
+  const [sessionDuration, setSessionDuration] = useState('90');
+  const [sessionLocation, setSessionLocation] = useState('');
+  const [sessionMapsUrl, setSessionMapsUrl] = useState('');
+  const [sessionOpponent, setSessionOpponent] = useState('');
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [repeatUntil, setRepeatUntil] = useState('');
+
   const load = useCallback(async () => {
     setIsLoading(true);
     const rows = await fetchMyAcademies();
@@ -85,6 +103,68 @@ export default function AcademyScreen() {
   async function selectAcademy(academyId: string) {
     setSelectedId(academyId);
     setEnrolments(await fetchEnrolments(academyId));
+  }
+
+  const sessionKind: SessionKind = subTab === 'matches' ? 'match' : 'training';
+
+  const loadSessions = useCallback(async () => {
+    if (!selectedId) {
+      setSessions([]);
+      return;
+    }
+    setSessions(await fetchSessions(selectedId, sessionKind));
+  }, [selectedId, sessionKind]);
+
+  useEffect(() => {
+    if (subTab === 'trainings' || subTab === 'matches') loadSessions();
+  }, [subTab, loadSessions]);
+
+  async function handleCreateSession() {
+    if (!selectedId || isCreating) return;
+
+    // Times are entered as plain local date/time; build the instant from them.
+    const startsAt = new Date(`${sessionDate}T${sessionTime}`);
+    if (Number.isNaN(startsAt.getTime())) {
+      setErrorMessage(t('academy.invalidDateTime'));
+      return;
+    }
+
+    const minutes = Number(sessionDuration) || 90;
+    const endsAt = new Date(startsAt.getTime() + minutes * 60000);
+
+    setIsCreating(true);
+    setErrorMessage('');
+
+    const { error } = await createSessions({
+      academyId: selectedId,
+      kind: sessionKind,
+      title: sessionTitle,
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+      locationName: sessionLocation,
+      mapsUrl: sessionMapsUrl,
+      opponent: sessionKind === 'match' ? sessionOpponent : null,
+      repeatWeekly,
+      repeatUntil: repeatWeekly ? repeatUntil : null,
+    });
+
+    setIsCreating(false);
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+
+    setSessionTitle('');
+    setSessionDate('');
+    setSessionTime('');
+    setSessionLocation('');
+    setSessionMapsUrl('');
+    setSessionOpponent('');
+    setRepeatWeekly(false);
+    setRepeatUntil('');
+    setShowSessionForm(false);
+    loadSessions();
   }
 
   async function handleCreate() {
@@ -315,15 +395,179 @@ export default function AcademyScreen() {
                 />
               ))
             )
+          ) : subTab === 'trainings' || subTab === 'matches' ? (
+            !hasAcademies ? (
+              <EmptyBox styles={styles} colors={colors} icon="school-outline">
+                {t('academy.noAcademies')}
+              </EmptyBox>
+            ) : (
+              <>
+                {showSessionForm ? (
+                  <View style={styles.card}>
+                    <Text style={styles.cardTitle}>
+                      {sessionKind === 'match'
+                        ? t('academy.newMatchTitle')
+                        : t('academy.newTrainingTitle')}
+                    </Text>
+
+                    <TextInput
+                      style={styles.input}
+                      value={sessionTitle}
+                      onChangeText={setSessionTitle}
+                      placeholder={t('academy.sessionTitlePlaceholder')}
+                      placeholderTextColor={colors.greyDark}
+                    />
+
+                    <View style={styles.inputRow}>
+                      <TextInput
+                        style={[styles.input, styles.inputHalf]}
+                        value={sessionDate}
+                        onChangeText={setSessionDate}
+                        placeholder={t('academy.datePlaceholder')}
+                        placeholderTextColor={colors.greyDark}
+                        autoCapitalize="none"
+                      />
+                      <TextInput
+                        style={[styles.input, styles.inputHalf]}
+                        value={sessionTime}
+                        onChangeText={setSessionTime}
+                        placeholder={t('academy.timePlaceholder')}
+                        placeholderTextColor={colors.greyDark}
+                        autoCapitalize="none"
+                      />
+                    </View>
+
+                    <TextInput
+                      style={styles.input}
+                      value={sessionDuration}
+                      onChangeText={setSessionDuration}
+                      placeholder={t('academy.durationPlaceholder')}
+                      placeholderTextColor={colors.greyDark}
+                      keyboardType="number-pad"
+                    />
+
+                    {sessionKind === 'match' ? (
+                      <TextInput
+                        style={styles.input}
+                        value={sessionOpponent}
+                        onChangeText={setSessionOpponent}
+                        placeholder={t('academy.opponentPlaceholder')}
+                        placeholderTextColor={colors.greyDark}
+                      />
+                    ) : null}
+
+                    <TextInput
+                      style={styles.input}
+                      value={sessionLocation}
+                      onChangeText={setSessionLocation}
+                      placeholder={t('academy.locationPlaceholder')}
+                      placeholderTextColor={colors.greyDark}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={sessionMapsUrl}
+                      onChangeText={setSessionMapsUrl}
+                      placeholder={t('academy.mapsUrlPlaceholder')}
+                      placeholderTextColor={colors.greyDark}
+                      autoCapitalize="none"
+                    />
+
+                    <AnimatedPressable
+                      style={styles.toggleRow}
+                      onPress={() => setRepeatWeekly((value) => !value)}
+                    >
+                      <Ionicons
+                        name={repeatWeekly ? 'checkbox' : 'square-outline'}
+                        size={19}
+                        color={repeatWeekly ? colors.greenLight : colors.greyDark}
+                      />
+                      <Text style={styles.toggleText}>{t('academy.repeatWeekly')}</Text>
+                    </AnimatedPressable>
+
+                    {repeatWeekly ? (
+                      <TextInput
+                        style={styles.input}
+                        value={repeatUntil}
+                        onChangeText={setRepeatUntil}
+                        placeholder={t('academy.repeatUntilPlaceholder')}
+                        placeholderTextColor={colors.greyDark}
+                        autoCapitalize="none"
+                      />
+                    ) : null}
+
+                    {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+                    <View style={styles.formActions}>
+                      <AppButton
+                        title={t('common.cancel')}
+                        variant="outline"
+                        fullWidth={false}
+                        style={styles.formButton}
+                        onPress={() => {
+                          setShowSessionForm(false);
+                          setErrorMessage('');
+                        }}
+                      />
+                      <AppButton
+                        title={t('academy.scheduleAction')}
+                        loading={isCreating}
+                        disabled={!sessionTitle.trim() || !sessionDate || !sessionTime}
+                        fullWidth={false}
+                        style={styles.formButton}
+                        onPress={handleCreateSession}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <AnimatedPressable
+                    style={styles.createButton}
+                    hoverScale={1.02}
+                    onPress={() => setShowSessionForm(true)}
+                  >
+                    <Ionicons name="add" size={18} color={colors.blackText} />
+                    <Text style={styles.createButtonText}>
+                      {sessionKind === 'match'
+                        ? t('academy.newMatchTitle')
+                        : t('academy.newTrainingTitle')}
+                    </Text>
+                  </AnimatedPressable>
+                )}
+
+                {sessions.length === 0 ? (
+                  <EmptyBox
+                    styles={styles}
+                    colors={colors}
+                    icon={sessionKind === 'match' ? 'trophy-outline' : 'time-outline'}
+                  >
+                    {sessionKind === 'match'
+                      ? t('academy.noMatches')
+                      : t('academy.noTrainings')}
+                  </EmptyBox>
+                ) : (
+                  sessions.map((session) => (
+                    <SessionRowView
+                      key={session.id}
+                      styles={styles}
+                      colors={colors}
+                      session={session}
+                      t={t}
+                      onToggleCancel={async () => {
+                        await cancelSession(session.id, !session.is_cancelled);
+                        loadSessions();
+                      }}
+                      onDelete={async () => {
+                        await deleteSession(session.id);
+                        loadSessions();
+                      }}
+                    />
+                  ))
+                )}
+              </>
+            )
           ) : (
-            // Trainings, Matches and Messages need schema of their own; the
-            // tabs exist so the shape is settled, but they show an honest
-            // placeholder rather than a mock.
-            <EmptyBox
-              styles={styles}
-              colors={colors}
-              icon={SUB_TABS.find((tab) => tab.key === subTab)?.icon ?? 'construct-outline'}
-            >
+            // Messages needs its own schema, with the parent-oversight rules
+            // we settled on. Honest placeholder rather than a mock.
+            <EmptyBox styles={styles} colors={colors} icon="chatbubbles-outline">
               {t('academy.comingNext')}
             </EmptyBox>
           )}
@@ -348,6 +592,75 @@ function EmptyBox({
     <View style={styles.emptyBox}>
       {icon ? <Ionicons name={icon} size={26} color={colors.greyDark} /> : null}
       <Text style={styles.emptyText}>{children}</Text>
+    </View>
+  );
+}
+
+function SessionRowView({
+  styles,
+  colors,
+  session,
+  t,
+  onToggleCancel,
+  onDelete,
+}: {
+  styles: ReturnType<typeof makeStyles>;
+  colors: AppColors;
+  session: SessionRow;
+  t: (key: string) => string;
+  onToggleCancel: () => void;
+  onDelete: () => void;
+}) {
+  const start = new Date(session.starts_at);
+  const end = new Date(session.ends_at);
+
+  const when = `${start.toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })} · ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}–${end.toLocaleTimeString(
+    [],
+    { hour: '2-digit', minute: '2-digit' }
+  )}`;
+
+  return (
+    <View style={[styles.memberRow, session.is_cancelled && styles.sessionCancelled]}>
+      <View style={styles.memberAvatar}>
+        <Ionicons
+          name={session.kind === 'match' ? 'trophy-outline' : 'time-outline'}
+          size={18}
+          color={session.is_cancelled ? colors.greyDark : colors.greenLight}
+        />
+      </View>
+
+      <View style={styles.memberInfo}>
+        <Text style={styles.memberName}>
+          {session.title}
+          {session.opponent ? ` · ${session.opponent}` : ''}
+        </Text>
+        <Text style={styles.memberMeta}>
+          {[
+            when,
+            session.location_name,
+            session.recurrence_group_id ? t('academy.repeats') : null,
+            session.is_cancelled ? t('academy.cancelled') : null,
+          ]
+            .filter(Boolean)
+            .join(' • ')}
+        </Text>
+      </View>
+
+      <AnimatedPressable style={styles.rejectButton} onPress={onToggleCancel}>
+        <Ionicons
+          name={session.is_cancelled ? 'refresh' : 'close'}
+          size={16}
+          color={colors.grey}
+        />
+      </AnimatedPressable>
+
+      <AnimatedPressable style={styles.rejectButton} onPress={onDelete}>
+        <Ionicons name="trash-outline" size={15} color={colors.grey} />
+      </AnimatedPressable>
     </View>
   );
 }
@@ -459,6 +772,28 @@ const makeStyles = (colors: AppColors) =>
       fontSize: scaleFont(14),
       fontWeight: '600',
       marginBottom: spacing.sm,
+    },
+    inputRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    inputHalf: {
+      flex: 1,
+    },
+    toggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    toggleText: {
+      color: colors.greySoft,
+      fontSize: scaleFont(13),
+      fontWeight: '700',
+    },
+    sessionCancelled: {
+      opacity: 0.55,
     },
     formActions: {
       flexDirection: 'row',

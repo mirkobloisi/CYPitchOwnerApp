@@ -117,6 +117,92 @@ export async function respondToEnrolment(enrolmentId: string, approve: boolean) 
     .eq('id', enrolmentId);
 }
 
+export type SessionKind = 'training' | 'match';
+
+export type SessionRow = {
+  id: string;
+  academy_id: string;
+  kind: SessionKind;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  location_name: string | null;
+  maps_url: string | null;
+  opponent: string | null;
+  notes: string | null;
+  is_cancelled: boolean;
+  recurrence_group_id: string | null;
+};
+
+const SESSION_COLUMNS =
+  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence_group_id';
+
+export async function fetchSessions(
+  academyId: string,
+  kind: SessionKind
+): Promise<SessionRow[]> {
+  const { data } = await academy()
+    .from('sessions')
+    .select(SESSION_COLUMNS)
+    .eq('academy_id', academyId)
+    .eq('kind', kind)
+    .order('starts_at', { ascending: true });
+
+  return (data ?? []) as SessionRow[];
+}
+
+/**
+ * Creates one session, or a weekly series. Each occurrence is a real row
+ * sharing a recurrence_group_id, so a single week can later be moved or
+ * cancelled without unpicking a rule.
+ */
+export async function createSessions(input: {
+  academyId: string;
+  kind: SessionKind;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  locationName?: string | null;
+  mapsUrl?: string | null;
+  opponent?: string | null;
+  notes?: string | null;
+  repeatWeekly?: boolean;
+  repeatUntil?: string | null;
+}) {
+  return academy().rpc('create_sessions', {
+    target_academy_id: input.academyId,
+    session_kind: input.kind,
+    session_title: input.title.trim(),
+    first_starts_at: input.startsAt,
+    first_ends_at: input.endsAt,
+    location_name: input.locationName?.trim() || null,
+    maps_url: input.mapsUrl?.trim() || null,
+    opponent: input.opponent?.trim() || null,
+    notes: input.notes?.trim() || null,
+    repeat_weekly: input.repeatWeekly ?? false,
+    repeat_until: input.repeatUntil || null,
+  });
+}
+
+export async function cancelSession(sessionId: string, cancelled: boolean) {
+  return academy()
+    .from('sessions')
+    .update({ is_cancelled: cancelled, updated_at: new Date().toISOString() })
+    .eq('id', sessionId);
+}
+
+export async function deleteSession(sessionId: string) {
+  return academy().from('sessions').delete().eq('id', sessionId);
+}
+
+/** Removes every remaining occurrence of a repeating series. */
+export async function deleteSeries(recurrenceGroupId: string) {
+  return academy()
+    .from('sessions')
+    .delete()
+    .eq('recurrence_group_id', recurrenceGroupId);
+}
+
 /** Age in whole years, used to show who is a child at a glance. */
 export function ageFromDateOfBirth(dateOfBirth: string | null): number | null {
   if (!dateOfBirth) return null;
