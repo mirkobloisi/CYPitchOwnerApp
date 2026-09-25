@@ -153,3 +153,40 @@ export async function signedMemberAvatars(
 
   return Object.fromEntries(entries);
 }
+
+/**
+ * A group's picture: cropped square, shrunk, and uploaded under the
+ * conversation's own id, which is what the storage policy checks — so only
+ * the group's leader can write there.
+ *
+ * Public, unlike a member's photo: a group picture is a label for a
+ * conversation, not a photograph of a child.
+ */
+export async function cropAndUploadGroupImage(
+  conversationId: string,
+  image: PickedAvatarImage,
+  crop: { originX: number; originY: number; size: number }
+): Promise<string> {
+  const manipulated = await ImageManipulator.manipulateAsync(
+    image.uri,
+    [
+      { crop: { originX: crop.originX, originY: crop.originY, width: crop.size, height: crop.size } },
+      { resize: { width: 512, height: 512 } },
+    ],
+    { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
+  );
+
+  const response = await fetch(manipulated.uri);
+  const arrayBuffer = await response.arrayBuffer();
+
+  const path = `${conversationId}/group-${Date.now()}.jpg`;
+
+  const { error } = await supabase.storage
+    .from('academy-group-images')
+    .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('academy-group-images').getPublicUrl(path);
+  return data.publicUrl;
+}

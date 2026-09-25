@@ -25,6 +25,7 @@ import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
 import {
   Conversation,
+  collapseToOnePerConversation,
   createGroupChat,
   ensureStaffMember,
   fetchConversations,
@@ -144,7 +145,7 @@ export default function AcademyScreen() {
 
   const loadConversations = useCallback(async () => {
     if (selectedId) setStaffId(await ensureStaffMember(selectedId));
-    setConversations(await fetchConversations());
+    setConversations(collapseToOnePerConversation(await fetchConversations()));
   }, [selectedId]);
 
   useEffect(() => {
@@ -414,7 +415,7 @@ export default function AcademyScreen() {
     const label = academies.find((item) => item.id === selectedId)?.name ?? '';
     const title = `${label} · ${t(`academy.group_${who}`)}`.trim();
 
-    const { id, error } = await createGroupChat(staff, title, ids);
+    const { id, error } = await createGroupChat(staff, title, ids, true);
     setIsCreatingGroup(false);
 
     if (error || !id) {
@@ -941,12 +942,28 @@ export default function AcademyScreen() {
                     }
                   >
                     <View style={styles.memberRow}>
-                      <View style={styles.memberAvatar}>
-                        <Ionicons
-                          name={row.kind === 'group' ? 'people' : 'chatbubble-ellipses'}
-                          size={17}
-                          color={colors.greenLight}
-                        />
+                      <View>
+                        {row.kind === 'group' && row.image_url ? (
+                          <Image
+                            source={{ uri: row.image_url }}
+                            style={styles.memberAvatar}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.memberAvatar}>
+                            <Ionicons
+                              name={row.kind === 'group' ? 'people' : 'chatbubble-ellipses'}
+                              size={17}
+                              color={colors.greenLight}
+                            />
+                          </View>
+                        )}
+
+                        {row.kind === 'group' ? (
+                          <View style={styles.groupBadge}>
+                            <Ionicons name="people" size={9} color={colors.blackText} />
+                          </View>
+                        ) : null}
                       </View>
 
                       <View style={styles.memberInfo}>
@@ -964,6 +981,27 @@ export default function AcademyScreen() {
                         <View style={styles.unreadDot}>
                           <Text style={styles.unreadText}>{row.unread_count}</Text>
                         </View>
+                      ) : null}
+
+                      {row.kind === 'group' ? (
+                        <AnimatedPressable
+                          style={styles.groupSettings}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/academy-group',
+                              params: {
+                                conversationId: row.id,
+                                asMemberId: row.for_member_id,
+                              },
+                            } as any)
+                          }
+                        >
+                          <Ionicons
+                            name="ellipsis-horizontal"
+                            size={15}
+                            color={colors.greyDark}
+                          />
+                        </AnimatedPressable>
                       ) : null}
                     </View>
                   </AnimatedPressable>
@@ -1263,6 +1301,27 @@ const makeStyles = (colors: AppColors) =>
       color: colors.blackText,
       fontSize: 9,
       fontWeight: '900',
+    },
+    groupBadge: {
+      position: 'absolute',
+      right: -2,
+      bottom: -2,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.greenLight,
+      borderWidth: 2,
+      borderColor: colors.card,
+    },
+    groupSettings: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.cardSoft,
     },
     unreadDot: {
       minWidth: 20,
