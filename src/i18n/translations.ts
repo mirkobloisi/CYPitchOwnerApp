@@ -2,6 +2,16 @@ export type LanguageCode = 'en' | 'el' | 'ru';
 
 export const translations = {
   en: {
+    placeSearch: {
+      title: 'Find a place',
+      placeholder: 'Search a stadium, pitch or address',
+      hint: 'Type at least three letters to search the map.',
+      searching: 'Searching…',
+      noResults: 'Nothing found. Try a different spelling, or add the town.',
+      credit: 'Map data © OpenStreetMap contributors',
+      findElsewhere: 'Find another place on the map',
+      savedPlace: 'Map link saved for {name}',
+    },
     academyChat: {
       newTitle: 'New message',
       noneYet: 'No conversations yet. Start one with a parent or a player.',
@@ -43,6 +53,12 @@ export const translations = {
       profile: 'Profile',
     },
     academy: {
+      group_parents: 'Parents',
+      group_players: 'Players',
+      group_both: 'Everyone',
+      groupAllParents: 'Message all parents',
+      groupAllPlayers: 'Message all players',
+      groupEveryone: 'Message everyone',
       title: 'Academy',
       subtitle: 'Your academies, members and enrolment requests',
       createTitle: 'New academy',
@@ -558,6 +574,16 @@ export const translations = {
     },
   },
   el: {
+    placeSearch: {
+      title: 'Αναζήτηση τοποθεσίας',
+      placeholder: 'Αναζητήστε στάδιο, γήπεδο ή διεύθυνση',
+      hint: 'Γράψτε τουλάχιστον τρία γράμματα για αναζήτηση στον χάρτη.',
+      searching: 'Αναζήτηση…',
+      noResults: 'Δεν βρέθηκε τίποτα. Δοκιμάστε άλλη γραφή ή προσθέστε την πόλη.',
+      credit: 'Δεδομένα χάρτη © OpenStreetMap contributors',
+      findElsewhere: 'Βρείτε άλλη τοποθεσία στον χάρτη',
+      savedPlace: 'Ο σύνδεσμος χάρτη αποθηκεύτηκε για {name}',
+    },
     academyChat: {
       newTitle: 'Νέο μήνυμα',
       noneYet: 'Καμία συνομιλία ακόμη. Ξεκινήστε με έναν γονέα ή έναν παίκτη.',
@@ -599,6 +625,12 @@ export const translations = {
       profile: 'Προφίλ',
     },
     academy: {
+      group_parents: 'Γονείς',
+      group_players: 'Παίκτες',
+      group_both: 'Όλοι',
+      groupAllParents: 'Μήνυμα σε όλους τους γονείς',
+      groupAllPlayers: 'Μήνυμα σε όλους τους παίκτες',
+      groupEveryone: 'Μήνυμα σε όλους',
       title: 'Ακαδημία',
       subtitle: 'Οι ακαδημίες, τα μέλη και τα αιτήματα εγγραφής σας',
       createTitle: 'Νέα ακαδημία',
@@ -1117,6 +1149,16 @@ export const translations = {
     },
   },
   ru: {
+    placeSearch: {
+      title: 'Найти место',
+      placeholder: 'Стадион, поле или адрес',
+      hint: 'Введите не менее трёх букв для поиска по карте.',
+      searching: 'Поиск…',
+      noResults: 'Ничего не найдено. Попробуйте другое написание или добавьте город.',
+      credit: 'Данные карты © OpenStreetMap contributors',
+      findElsewhere: 'Найти другое место на карте',
+      savedPlace: 'Ссылка на карту сохранена для {name}',
+    },
     academyChat: {
       newTitle: 'Новое сообщение',
       noneYet: 'Пока нет переписок. Напишите родителю или игроку.',
@@ -1158,6 +1200,12 @@ export const translations = {
       profile: 'Профиль',
     },
     academy: {
+      group_parents: 'Родители',
+      group_players: 'Игроки',
+      group_both: 'Все',
+      groupAllParents: 'Написать всем родителям',
+      groupAllPlayers: 'Написать всем игрокам',
+      groupEveryone: 'Написать всем',
       title: 'Академия',
       subtitle: 'Ваши академии, участники и заявки на вступление',
       createTitle: 'Новая академия',

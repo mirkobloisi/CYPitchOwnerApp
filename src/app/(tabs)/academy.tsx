@@ -19,10 +19,19 @@ import AppButton from '../../components/AppButton';
 import AppHeader from '../../components/AppHeader';
 import CalendarModal from '../../components/CalendarModal';
 import OptionsModal, { PickerOption } from '../../components/OptionsModal';
+import MemberGrid, { GridMember } from '../../components/MemberGrid';
+import PlaceSearchModal from '../../components/PlaceSearchModal';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
-import { Conversation, ensureStaffMember, fetchConversations } from '../../lib/academyChat';
+import {
+  Conversation,
+  createGroupChat,
+  ensureStaffMember,
+  fetchConversations,
+} from '../../lib/academyChat';
 import { NoticeArea } from '../../lib/academyNotices';
+import { signedMemberAvatars } from '../../lib/avatarUpload';
+import { Place, mapsUrlFor } from '../../lib/placeSearch';
 import { useAcademyRealtime } from '../../lib/academyRealtime';
 import { useAuth } from '../../lib/auth';
 import {
@@ -99,6 +108,8 @@ export default function AcademyScreen() {
   const { unread, markRead, enrolmentsVersion, messagesVersion } = useAcademyRealtime();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [staffId, setStaffId] = useState<string | null>(null);
+  const [memberAvatars, setMemberAvatars] = useState<Record<string, string | null>>({});
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
   const [picker, setPicker] = useState<'date' | 'time' | 'duration' | 'pitch' | 'until' | null>(
     null
@@ -173,6 +184,13 @@ export default function AcademyScreen() {
 
   const selectedPitch = pitches.find((pitch) => pitch.id === sessionPitchId) ?? null;
 
+  /** Set when the venue came from the map rather than the owner's own list. */
+  const [awayPlace, setAwayPlace] = useState<{ name: string; mapsUrl: string } | null>(null);
+  const [showPlaceSearch, setShowPlaceSearch] = useState(false);
+
+  const venueName = selectedPitch?.name ?? awayPlace?.name ?? null;
+  const venueMapsUrl = selectedPitch?.maps_url ?? awayPlace?.mapsUrl ?? null;
+
   function resetSessionForm() {
     setEditingSessionId(null);
     setSessionTitle('');
@@ -180,6 +198,7 @@ export default function AcademyScreen() {
     setSessionTime('');
     setSessionDuration(60);
     setSessionPitchId(null);
+    setAwayPlace(null);
     setSessionOpponent('');
     setRepeatWeekly(false);
     setRepeatForever(true);
@@ -202,6 +221,11 @@ export default function AcademyScreen() {
     );
     setSessionDuration(Math.max(15, Math.round((end.getTime() - start.getTime()) / 60000)));
     setSessionPitchId(session.pitch_id);
+    setAwayPlace(
+      !session.pitch_id && session.location_name
+        ? { name: session.location_name, mapsUrl: session.maps_url ?? '' }
+        : null
+    );
     setSessionOpponent(session.opponent ?? '');
     setRepeatWeekly(session.recurrence === 'weekly');
     setRepeatForever(session.recurrence === 'weekly' && !session.recurrence_until);
@@ -234,9 +258,11 @@ export default function AcademyScreen() {
       startsAt: startsAt.toISOString(),
       endsAt: endsAt.toISOString(),
       pitchId: sessionPitchId,
-      // The pitch carries its own Maps link, so the owner never re-enters one.
-      locationName: selectedPitch?.name ?? null,
-      mapsUrl: selectedPitch?.maps_url ?? null,
+      // Either the owner's own pitch, which carries its own Maps link, or a
+      // place picked off the map, which carries the one built from its
+      // coordinates. Both reach parents and children the same way.
+      locationName: venueName,
+      mapsUrl: venueMapsUrl,
       opponent: sessionKind === 'match' ? sessionOpponent : null,
       recurrence: (repeatWeekly ? 'weekly' : 'none') as 'weekly' | 'none',
       recurrenceUntil: repeatWeekly && !repeatForever ? repeatUntil : null,
@@ -328,6 +354,79 @@ export default function AcademyScreen() {
   const parents = approved.filter((e) => e.member?.member_kind === 'guardian');
 
   const hasAcademies = academies.length > 0;
+
+  /**
+   * Member photos sit in a private bucket — they are pictures of children —
+   * so each needs a short-lived signed URL. Storage RLS already lets this
+   * owner read the photos of everyone enrolled with them.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const people = enrolments
+      .map((row) => row.member)
+      .filter((member): member is NonNullable<typeof member> => member != null);
+
+    signedMemberAvatars(people).then((signed) => {
+      if (!cancelled) setMemberAvatars(signed);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enrolments]);
+
+  /** An enrolment row as the compact grid wants it. */
+  function toGridMember(row: EnrolmentRow): GridMember {
+    const age = ageFromDateOfBirth(row.member?.date_of_birth ?? null);
+
+    return {
+      id: row.member?.id ?? row.id,
+      full_name: row.member?.full_name ?? '—',
+      avatar_url: row.member?.avatar_url ?? null,
+      member_kind: row.member?.member_kind ?? 'player',
+      meta: age != null ? t('academy.ageValue').replace('{age}', String(age)) : null,
+    };
+  }
+
+  /**
+   * A group straight from the roster, so the owner does not have to tick
+   * forty names to reach everybody.
+   */
+  async function createRosterGroup(who: 'parents' | 'players' | 'both') {
+    if (!selectedId || isCreatingGroup) return;
+
+    setIsCreatingGroup(true);
+    setErrorMessage('');
+
+    const staff = await ensureStaffMember(selectedId);
+    const rows = who === 'parents' ? parents : who === 'players' ? players : approved;
+    const ids = rows
+      .map((row) => row.member?.id)
+      .filter((id): id is string => typeof id === 'string');
+
+    if (!staff || ids.length === 0) {
+      setIsCreatingGroup(false);
+      setErrorMessage(t('academyChat.nobody'));
+      return;
+    }
+
+    const label = academies.find((item) => item.id === selectedId)?.name ?? '';
+    const title = `${label} · ${t(`academy.group_${who}`)}`.trim();
+
+    const { id, error } = await createGroupChat(staff, title, ids);
+    setIsCreatingGroup(false);
+
+    if (error || !id) {
+      setErrorMessage(error ?? t('academyChat.couldNotStart'));
+      return;
+    }
+
+    router.push({
+      pathname: '/academy-chat',
+      params: { conversationId: id, asMemberId: staff },
+    } as any);
+  }
 
   /** Notices only ever belong to these three tabs. */
   function unreadFor(key: SubTab) {
@@ -515,38 +614,88 @@ export default function AcademyScreen() {
                 })
               )}
             </>
-          ) : subTab === 'players' ? (
-            players.length === 0 ? (
-              <EmptyBox styles={styles} colors={colors} icon="football-outline">
-                {t('academy.noPlayers')}
-              </EmptyBox>
-            ) : (
-              players.map((enrolment) => (
-                <MemberRow
-                  key={enrolment.id}
-                  styles={styles}
-                  colors={colors}
-                  enrolment={enrolment}
-                  t={t}
-                />
-              ))
-            )
-          ) : subTab === 'parents' ? (
-            parents.length === 0 ? (
-              <EmptyBox styles={styles} colors={colors} icon="people-outline">
-                {t('academy.noParents')}
-              </EmptyBox>
-            ) : (
-              parents.map((enrolment) => (
-                <MemberRow
-                  key={enrolment.id}
-                  styles={styles}
-                  colors={colors}
-                  enrolment={enrolment}
-                  t={t}
-                />
-              ))
-            )
+          ) : subTab === 'players' || subTab === 'parents' ? (
+            <>
+              {(() => {
+                const isPlayers = subTab === 'players';
+                const waiting = pending.filter((row) =>
+                  isPlayers
+                    ? row.member?.member_kind === 'player'
+                    : row.member?.member_kind === 'guardian'
+                );
+                const roster = isPlayers ? players : parents;
+
+                return (
+                  <>
+                    {waiting.length > 0 ? (
+                      <>
+                        <Text style={styles.sectionTitle}>
+                          {t('academy.pendingTitle')} ({waiting.length})
+                        </Text>
+                        {waiting.map((enrolment) => (
+                          <MemberRow
+                            key={enrolment.id}
+                            styles={styles}
+                            colors={colors}
+                            enrolment={enrolment}
+                            avatarUrl={memberAvatars[enrolment.member?.id ?? ''] ?? null}
+                            t={t}
+                            onApprove={() => respond(enrolment.id, true)}
+                            onReject={() => respond(enrolment.id, false)}
+                          />
+                        ))}
+                      </>
+                    ) : null}
+
+                    <MemberGrid
+                      members={roster.map(toGridMember)}
+                      avatars={memberAvatars}
+                      emptyText={
+                        isPlayers ? t('academy.noPlayers') : t('academy.noParents')
+                      }
+                    />
+
+                    {roster.length > 0 ? (
+                      <AnimatedPressable
+                        style={styles.groupButton}
+                        hoverScale={1.02}
+                        onPress={() => createRosterGroup(isPlayers ? 'players' : 'parents')}
+                      >
+                        {isCreatingGroup ? (
+                          <ActivityIndicator color={colors.blackText} size="small" />
+                        ) : (
+                          <>
+                            <Ionicons name="people" size={16} color={colors.blackText} />
+                            <Text style={styles.groupButtonText}>
+                              {isPlayers
+                                ? t('academy.groupAllPlayers')
+                                : t('academy.groupAllParents')}
+                            </Text>
+                          </>
+                        )}
+                      </AnimatedPressable>
+                    ) : null}
+
+                    {approved.length > 0 ? (
+                      <AnimatedPressable
+                        style={styles.groupButtonPlain}
+                        hoverScale={1.02}
+                        onPress={() => createRosterGroup('both')}
+                      >
+                        <Ionicons name="chatbubbles-outline" size={15} color={colors.greenLight} />
+                        <Text style={styles.groupButtonPlainText}>
+                          {t('academy.groupEveryone')}
+                        </Text>
+                      </AnimatedPressable>
+                    ) : null}
+
+                    {errorMessage ? (
+                      <Text style={styles.errorText}>{errorMessage}</Text>
+                    ) : null}
+                  </>
+                );
+              })()}
+            </>
           ) : subTab === 'trainings' || subTab === 'matches' ? (
             !hasAcademies ? (
               <EmptyBox styles={styles} colors={colors} icon="school-outline">
@@ -617,14 +766,30 @@ export default function AcademyScreen() {
                       colors={colors}
                       icon="location-outline"
                       label={t('academy.pitchLabel')}
-                      value={selectedPitch?.name ?? ''}
+                      value={venueName ?? ''}
                       onPress={() => setPicker('pitch')}
                     />
 
-                    {selectedPitch?.maps_url ? (
+                    {/* A match is often away, at a ground this owner does not
+                        run, so anywhere on the map can be the venue. */}
+                    <AnimatedPressable
+                      style={styles.findPlaceRow}
+                      onPress={() => setShowPlaceSearch(true)}
+                    >
+                      <Ionicons name="search" size={15} color={colors.greenLight} />
+                      <Text style={styles.findPlaceText}>
+                        {t('placeSearch.findElsewhere')}
+                      </Text>
+                    </AnimatedPressable>
+
+                    {venueMapsUrl ? (
                       <View style={styles.mapsNote}>
                         <Ionicons name="map-outline" size={14} color={colors.blueLight} />
-                        <Text style={styles.mapsNoteText}>{t('academy.mapsLinked')}</Text>
+                        <Text style={styles.mapsNoteText}>
+                          {awayPlace
+                            ? t('placeSearch.savedPlace').replace('{name}', awayPlace.name)
+                            : t('academy.mapsLinked')}
+                        </Text>
                       </View>
                     ) : null}
 
@@ -851,8 +1016,21 @@ export default function AcademyScreen() {
         options={pitchOptions}
         value={sessionPitchId}
         emptyText={t('academy.noPitches')}
-        onSelect={setSessionPitchId}
+        onSelect={(value) => {
+          // One venue at a time: choosing an own pitch drops the map place.
+          setSessionPitchId(value);
+          setAwayPlace(null);
+        }}
         onClose={() => setPicker(null)}
+      />
+
+      <PlaceSearchModal
+        visible={showPlaceSearch}
+        onSelect={(place: Place) => {
+          setAwayPlace({ name: place.name, mapsUrl: mapsUrlFor(place) });
+          setSessionPitchId(null);
+        }}
+        onClose={() => setShowPlaceSearch(false)}
       />
     </Screen>
   );
@@ -998,6 +1176,7 @@ function MemberRow({
   styles,
   colors,
   enrolment,
+  avatarUrl,
   t,
   onApprove,
   onReject,
@@ -1005,6 +1184,7 @@ function MemberRow({
   styles: ReturnType<typeof makeStyles>;
   colors: AppColors;
   enrolment: EnrolmentRow;
+  avatarUrl?: string | null;
   t: (key: string) => string;
   onApprove?: () => void;
   onReject?: () => void;
@@ -1014,13 +1194,17 @@ function MemberRow({
 
   return (
     <View style={styles.memberRow}>
-      <View style={styles.memberAvatar}>
-        <Ionicons
-          name={isPlayer ? 'football-outline' : 'person'}
-          size={18}
-          color={isPlayer ? colors.blueLight : colors.greyDark}
-        />
-      </View>
+      {avatarUrl ? (
+        <Image source={{ uri: avatarUrl }} style={styles.memberAvatar} resizeMode="cover" />
+      ) : (
+        <View style={styles.memberAvatar}>
+          <Ionicons
+            name={isPlayer ? 'football-outline' : 'person'}
+            size={18}
+            color={isPlayer ? colors.blueLight : colors.greyDark}
+          />
+        </View>
+      )}
 
       <View style={styles.memberInfo}>
         <Text style={styles.memberName}>{enrolment.member?.full_name ?? '—'}</Text>
@@ -1236,6 +1420,23 @@ const makeStyles = (colors: AppColors) =>
     pickerValueEmpty: {
       color: colors.greyDark,
     },
+    findPlaceRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 11,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderGreen,
+      backgroundColor: colors.greenSoft,
+      marginBottom: spacing.sm,
+    },
+    findPlaceText: {
+      color: colors.greenLight,
+      fontSize: scaleFont(13),
+      fontWeight: '800',
+    },
     mapsNote: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1332,6 +1533,38 @@ const makeStyles = (colors: AppColors) =>
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.cardSoft,
+    },
+    groupButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: colors.greenLight,
+      borderRadius: radius.lg,
+      paddingVertical: 12,
+      marginBottom: 8,
+    },
+    groupButtonText: {
+      color: colors.blackText,
+      fontSize: scaleFont(13),
+      fontWeight: '900',
+    },
+    groupButtonPlain: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderGreen,
+      backgroundColor: colors.greenSoft,
+      paddingVertical: 11,
+      marginBottom: 8,
+    },
+    groupButtonPlainText: {
+      color: colors.greenLight,
+      fontSize: scaleFont(13),
+      fontWeight: '800',
     },
     emptyBox: {
       backgroundColor: colors.card,

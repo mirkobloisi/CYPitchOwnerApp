@@ -119,3 +119,37 @@ export async function cropAndUploadAcademyLogo(
   const { data } = supabase.storage.from('academy-images').getPublicUrl(path);
   return data.publicUrl;
 }
+
+/**
+ * A viewable URL for an academy member's photo.
+ *
+ * Unlike the academy crest, member photos live in a private bucket — they are
+ * pictures of children. Storage RLS already lets an academy's owner read the
+ * photos of everyone enrolled with them, so this only has to sign the path;
+ * the signature expires, so it is fetched when the picture is shown rather
+ * than stored.
+ *
+ * Returns null for a member with no photo, or when signing is refused, so a
+ * caller can fall back to a placeholder without special-casing errors.
+ */
+export async function signedMemberAvatarUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+
+  const { data, error } = await supabase.storage
+    .from('academy-avatars')
+    .createSignedUrl(path, 60 * 60);
+
+  if (error) return null;
+  return data?.signedUrl ?? null;
+}
+
+/** Signs several at once, keyed by member id, for a roster. */
+export async function signedMemberAvatars(
+  members: { id: string; avatar_url: string | null }[]
+): Promise<Record<string, string | null>> {
+  const entries = await Promise.all(
+    members.map(async (member) => [member.id, await signedMemberAvatarUrl(member.avatar_url)] as const)
+  );
+
+  return Object.fromEntries(entries);
+}

@@ -8,6 +8,7 @@ import AppButton from '../components/AppButton';
 import AppHeader from '../components/AppHeader';
 import AvatarCropModal from '../components/AvatarCropModal';
 import AvatarPickerTrigger from '../components/AvatarPickerTrigger';
+import MemberGrid, { GridMember } from '../components/MemberGrid';
 import Screen from '../components/Screen';
 import { useTranslation } from '../i18n/LanguageContext';
 import {
@@ -22,7 +23,12 @@ import {
   respondToEnrolment,
   updateAcademy,
 } from '../lib/academyData';
-import { PickedAvatarImage, cropAndUploadAcademyLogo } from '../lib/avatarUpload';
+import { createGroupChat, ensureStaffMember } from '../lib/academyChat';
+import {
+  PickedAvatarImage,
+  cropAndUploadAcademyLogo,
+  signedMemberAvatars,
+} from '../lib/avatarUpload';
 import { AppColors } from '../theme/palettes';
 import { useAppTheme } from '../theme/ThemeContext';
 import { radius, spacing } from '../theme/layout';
@@ -41,6 +47,8 @@ export default function AcademyDetailsScreen() {
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [memberAvatars, setMemberAvatars] = useState<Record<string, string | null>>({});
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
@@ -148,6 +156,77 @@ export default function AcademyDetailsScreen() {
   const players = approved.filter((row) => row.member?.member_kind === 'player');
   const parents = approved.filter((row) => row.member?.member_kind === 'guardian');
 
+  /**
+   * Member photos sit in a private bucket — they are pictures of children —
+   * so each needs a short-lived signed URL. Storage RLS already lets this
+   * academy's owner read the photos of everyone enrolled with them.
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const people = enrolments
+      .map((row) => row.member)
+      .filter((member): member is NonNullable<typeof member> => member != null);
+
+    signedMemberAvatars(people).then((signed) => {
+      if (!cancelled) setMemberAvatars(signed);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enrolments]);
+
+  /** An enrolment row as the compact grid wants it. */
+  function toGridMember(row: EnrolmentRow): GridMember {
+    const age = ageFromDateOfBirth(row.member?.date_of_birth ?? null);
+
+    return {
+      id: row.member?.id ?? row.id,
+      full_name: row.member?.full_name ?? '—',
+      avatar_url: row.member?.avatar_url ?? null,
+      member_kind: row.member?.member_kind ?? 'player',
+      meta: age != null ? t('academy.ageValue').replace('{age}', String(age)) : null,
+    };
+  }
+
+  /**
+   * A group straight from the roster, so the owner does not have to tick
+   * forty names to reach everybody.
+   */
+  async function createRosterGroup(who: 'parents' | 'players' | 'both') {
+    if (!academyId || isCreatingGroup) return;
+
+    setIsCreatingGroup(true);
+    setErrorMessage('');
+
+    const staff = await ensureStaffMember(academyId);
+    const rows = who === 'parents' ? parents : who === 'players' ? players : approved;
+    const ids = rows
+      .map((row) => row.member?.id)
+      .filter((id): id is string => typeof id === 'string');
+
+    if (!staff || ids.length === 0) {
+      setIsCreatingGroup(false);
+      setErrorMessage(t('academyChat.nobody'));
+      return;
+    }
+
+    const title = `${item?.name ?? ''} · ${t(`academy.group_${who}`)}`.trim();
+    const { id, error } = await createGroupChat(staff, title, ids);
+    setIsCreatingGroup(false);
+
+    if (error || !id) {
+      setErrorMessage(error ?? t('academyChat.couldNotStart'));
+      return;
+    }
+
+    router.push({
+      pathname: '/academy-chat',
+      params: { conversationId: id, asMemberId: staff },
+    } as any);
+  }
+
   if (isLoading) {
     return (
       <Screen maxWidth={900}>
@@ -217,7 +296,8 @@ export default function AcademyDetailsScreen() {
         styles={styles}
         colors={colors}
         t={t}
-        people={players}
+        people={players.map(toGridMember)}
+        avatars={memberAvatars}
         pending={pending.filter((row) => row.member?.member_kind === 'player')}
         emptyText={t('academy.noPlayers')}
         onRespond={respond}
@@ -229,11 +309,39 @@ export default function AcademyDetailsScreen() {
         styles={styles}
         colors={colors}
         t={t}
-        people={parents}
+        people={parents.map(toGridMember)}
+        avatars={memberAvatars}
         pending={pending.filter((row) => row.member?.member_kind === 'guardian')}
         emptyText={t('academy.noParents')}
         onRespond={respond}
       />
+
+      {/* Reaching a whole roster should not mean ticking forty names. */}
+      {approved.length > 0 ? (
+        <View style={styles.groupRow}>
+          <GroupButton
+            styles={styles}
+            colors={colors}
+            busy={isCreatingGroup}
+            label={t('academy.groupAllParents')}
+            onPress={() => createRosterGroup('parents')}
+          />
+          <GroupButton
+            styles={styles}
+            colors={colors}
+            busy={isCreatingGroup}
+            label={t('academy.groupAllPlayers')}
+            onPress={() => createRosterGroup('players')}
+          />
+          <GroupButton
+            styles={styles}
+            colors={colors}
+            busy={isCreatingGroup}
+            label={t('academy.groupEveryone')}
+            onPress={() => createRosterGroup('both')}
+          />
+        </View>
+      ) : null}
 
       <Text style={styles.heading}>{t('academy.tabSchedule')}</Text>
 
@@ -337,6 +445,7 @@ function PeopleList({
   colors,
   t,
   people,
+  avatars,
   pending,
   emptyText,
   onRespond,
@@ -344,7 +453,8 @@ function PeopleList({
   styles: ReturnType<typeof makeStyles>;
   colors: AppColors;
   t: (key: string) => string;
-  people: EnrolmentRow[];
+  people: GridMember[];
+  avatars: Record<string, string | null>;
   pending: EnrolmentRow[];
   emptyText: string;
   onRespond: (enrolmentId: string, approve: boolean) => void;
@@ -370,16 +480,38 @@ function PeopleList({
         </>
       ) : null}
 
-      {people.length === 0 ? (
-        <EmptyBox styles={styles} colors={colors} icon="people-outline">
-          {emptyText}
-        </EmptyBox>
-      ) : (
-        people.map((row) => (
-          <PersonRow key={row.id} styles={styles} colors={colors} t={t} enrolment={row} />
-        ))
-      )}
+      <MemberGrid members={people} avatars={avatars} emptyText={emptyText} />
     </>
+  );
+}
+
+/** One of the three shortcuts that message a whole roster. */
+function GroupButton({
+  styles,
+  colors,
+  busy,
+  label,
+  onPress,
+}: {
+  styles: ReturnType<typeof makeStyles>;
+  colors: AppColors;
+  busy: boolean;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <AnimatedPressable style={styles.groupButton} hoverScale={1.02} onPress={onPress}>
+      {busy ? (
+        <ActivityIndicator color={colors.greenLight} size="small" />
+      ) : (
+        <>
+          <Ionicons name="chatbubbles-outline" size={14} color={colors.greenLight} />
+          <Text style={styles.groupButtonText} numberOfLines={1}>
+            {label}
+          </Text>
+        </>
+      )}
+    </AnimatedPressable>
   );
 }
 
@@ -545,6 +677,31 @@ const makeStyles = (colors: AppColors) =>
       fontWeight: '800',
       marginTop: 2,
       textAlign: 'center',
+    },
+    groupRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    groupButton: {
+      flexGrow: 1,
+      flexBasis: 150,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.borderGreen,
+      backgroundColor: colors.greenSoft,
+      paddingVertical: 11,
+      paddingHorizontal: spacing.sm,
+    },
+    groupButtonText: {
+      color: colors.greenLight,
+      fontSize: scaleFont(12),
+      fontWeight: '800',
     },
     heading: {
       color: colors.greenLight,
