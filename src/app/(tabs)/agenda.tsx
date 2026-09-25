@@ -93,6 +93,15 @@ function eventStatusMeta(
   t: (path: string) => string
 ) {
   if (event.kind === 'block') {
+    // Orange, so a party reads as neither a match nor an ordinary booking.
+    if (event.block.block_type === 'party') {
+      return {
+        label: event.block.reference || t('agenda.partyDefault'),
+        color: colors.orange,
+        background: colors.orangeSoft,
+      };
+    }
+
     if (event.block.block_type === 'external_booking') {
       return { label: t('agenda.externalBookingDefault'), color: colors.blueLight, background: colors.blueSoft };
     }
@@ -361,6 +370,18 @@ export default function AgendaScreen() {
     return `${weekStart.getDate()} ${MONTH_LABELS[weekStart.getMonth()]} – ${end.getDate()} ${MONTH_LABELS[end.getMonth()]} ${end.getFullYear()}`;
   }
 
+  function openAddParty() {
+    if (!activePitch) return;
+    router.push({
+      pathname: '/add-external-booking',
+      params: {
+        pitchId: activePitch.id,
+        date: selectedDate.toISOString(),
+        kind: 'party',
+      },
+    });
+  }
+
   function openAddExternalBooking() {
     if (!activePitch) return;
     router.push({
@@ -477,6 +498,18 @@ export default function AgendaScreen() {
         >
           <Ionicons name="lock-closed-outline" size={16} color={colors.white} />
           <Text style={styles.actionButtonOutlineText}>{t('agenda.blockSlot')}</Text>
+        </AnimatedPressable>
+
+        {/* A party takes the pitch for an evening rather than a playing
+            slot, so it gets its own button and its own time selection. */}
+        <AnimatedPressable
+          style={[styles.actionButtonOutline, selectedDayIsPast && styles.actionDisabled]}
+          hoverScale={1.03}
+          onPress={openAddParty}
+          disabled={selectedDayIsPast}
+        >
+          <Ionicons name="balloon-outline" size={16} color={colors.orange} />
+          <Text style={styles.actionButtonOutlineText}>{t('agenda.addParty')}</Text>
         </AnimatedPressable>
 
         <AnimatedPressable

@@ -226,6 +226,8 @@ export const translations = {
       noPitchLinked: 'No pitch is linked to your account yet. Contact MYPitch support to get set up.',
       blockSlot: 'Block Slot',
       addExternalBooking: 'Add External Booking',
+      addParty: 'Party',
+      partyDefault: 'Party',
       pastHint: 'This day has already passed — pick today or a later date to add a booking.',
       weekdays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
       months: [
@@ -372,6 +374,11 @@ export const translations = {
       usePhoto: 'Use Photo',
     },
     addExternalBooking: {
+      partyTimeStep: 'From when to when?',
+      partyFrom: 'Starts',
+      partyTo: 'Ends',
+      partyHint: 'A party holds the pitch for {hours} hours. Any time of day, in quarter hours.',
+      errorPartyOrder: 'The party has to end after it starts.',
       title: 'Add External Booking',
       lengthStep: '1. Length',
       startTimeStep: '2. Start Time',
@@ -818,6 +825,8 @@ export const translations = {
         'Δεν υπάρχει ακόμη γήπεδο συνδεδεμένο με τον λογαριασμό σας. Επικοινωνήστε με την υποστήριξη της MYPitch για να ρυθμιστεί.',
       blockSlot: 'Αποκλεισμός Ώρας',
       addExternalBooking: 'Προσθήκη Εξωτερικής Κράτησης',
+      addParty: 'Πάρτι',
+      partyDefault: 'Πάρτι',
       pastHint: 'Αυτή η ημέρα έχει ήδη περάσει — επιλέξτε σήμερα ή μεταγενέστερη ημερομηνία για να προσθέσετε κράτηση.',
       weekdays: ['ΔΕΥ', 'ΤΡΙ', 'ΤΕΤ', 'ΠΕΜ', 'ΠΑΡ', 'ΣΑΒ', 'ΚΥΡ'],
       months: [
@@ -967,6 +976,11 @@ export const translations = {
       usePhoto: 'Χρήση Φωτογραφίας',
     },
     addExternalBooking: {
+      partyTimeStep: 'Από πότε έως πότε;',
+      partyFrom: 'Αρχίζει',
+      partyTo: 'Τελειώνει',
+      partyHint: 'Το πάρτι κρατά το γήπεδο για {hours} ώρες. Οποιαδήποτε ώρα, ανά τέταρτο.',
+      errorPartyOrder: 'Το πάρτι πρέπει να τελειώνει μετά την έναρξη.',
       title: 'Προσθήκη Εξωτερικής Κράτησης',
       lengthStep: '1. Διάρκεια',
       startTimeStep: '2. Ώρα Έναρξης',
@@ -1412,6 +1426,8 @@ export const translations = {
         'К вашей учётной записи ещё не привязано поле. Обратитесь в службу поддержки MYPitch для настройки.',
       blockSlot: 'Заблокировать время',
       addExternalBooking: 'Добавить внешнее бронирование',
+      addParty: 'Праздник',
+      partyDefault: 'Праздник',
       pastHint: 'Этот день уже прошёл — выберите сегодняшний или более поздний день, чтобы добавить бронирование.',
       weekdays: ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'],
       months: [
@@ -1561,6 +1577,11 @@ export const translations = {
       usePhoto: 'Использовать фото',
     },
     addExternalBooking: {
+      partyTimeStep: 'С какого по какое время?',
+      partyFrom: 'Начало',
+      partyTo: 'Окончание',
+      partyHint: 'Праздник занимает поле на {hours} ч. Любое время суток, с шагом 15 минут.',
+      errorPartyOrder: 'Праздник должен заканчиваться позже, чем начинается.',
       title: 'Добавить внешнее бронирование',
       lengthStep: '1. Продолжительность',
       startTimeStep: '2. Время начала',

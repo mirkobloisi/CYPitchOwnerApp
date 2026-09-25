@@ -26,7 +26,12 @@ export type MatchRow = {
   cancellation_reason: string | null;
 };
 
-export type BlockType = 'blocked' | 'external_booking';
+/**
+ * 'party' is an external booking of a different shape: it takes the pitch for
+ * an evening rather than a playing slot, and picks its own start and end
+ * instead of a length from the slot grid.
+ */
+export type BlockType = 'blocked' | 'external_booking' | 'party';
 
 export type PitchBlockRow = {
   id: string;

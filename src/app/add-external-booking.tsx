@@ -8,6 +8,7 @@ import AppButton from '../components/AppButton';
 import AppHeader from '../components/AppHeader';
 import ConfirmDialog from '../components/ConfirmDialog';
 import DurationPicker from '../components/DurationPicker';
+import OptionsModal, { PickerOption } from '../components/OptionsModal';
 import RecurrencePicker, {
   initialRecurrence,
   RecurrenceValue,
@@ -52,7 +53,13 @@ export default function AddExternalBookingScreen() {
   const { colors } = useAppTheme();
   const { session } = useAuth();
   const router = useRouter();
-  const params = useLocalSearchParams<{ pitchId: string; date: string }>();
+  const params = useLocalSearchParams<{ pitchId: string; date: string; kind?: string }>();
+
+  /**
+   * A party takes the pitch for an evening rather than a playing slot, so it
+   * picks its own start and end instead of a length and a slot from the grid.
+   */
+  const isParty = params.kind === 'party';
   const { t } = useTranslation();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -65,11 +72,23 @@ export default function AddExternalBookingScreen() {
 
   const day = useMemo(() => startOfDay(new Date(params.date)), [params.date]);
 
+  const quarterHourOptions: PickerOption[] = useMemo(() => {
+    const options: PickerOption[] = [];
+    for (let minutes = 0; minutes <= 24 * 60; minutes += 15) {
+      options.push({ value: String(minutes), label: minutesToLabel(minutes) });
+    }
+    return options;
+  }, []);
+
   const [availability, setAvailability] = useState<AvailabilityRow[]>([]);
   const [busy, setBusy] = useState<BusyRange[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [allDay, setAllDay] = useState(false);
   const [selectedStart, setSelectedStart] = useState<number | null>(null);
+  // Party only: free start and end, in quarter hours.
+  const [partyStart, setPartyStart] = useState(17 * 60);
+  const [partyEnd, setPartyEnd] = useState(20 * 60);
+  const [openPicker, setOpenPicker] = useState<'start' | 'end' | null>(null);
   const [source, setSource] = useState(SOURCE_OPTIONS[0]);
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
@@ -149,7 +168,28 @@ export default function AddExternalBookingScreen() {
     let startTime: Date;
     let endTime: Date;
 
-    if (allDay) {
+    if (isParty) {
+      if (partyEnd <= partyStart) {
+        setErrorMessage(t('addExternalBooking.errorPartyOrder'));
+        return;
+      }
+
+      const clash = busy.find(
+        (range) =>
+          range.start < dateAtMinutes(day, partyEnd) &&
+          range.end > dateAtMinutes(day, partyStart)
+      );
+
+      if (clash) {
+        setErrorMessage(
+          t('addExternalBooking.errorDayConflict', { list: formatRange(clash) })
+        );
+        return;
+      }
+
+      startTime = dateAtMinutes(day, partyStart);
+      endTime = dateAtMinutes(day, partyEnd);
+    } else if (allDay) {
       if (!bookableSpan) {
         setErrorMessage(
           dayIsPast
@@ -198,7 +238,7 @@ export default function AddExternalBookingScreen() {
           endTime,
           repeatUntil: untilDate,
           openEnded: recurrence.openEnded,
-          blockType: 'external_booking',
+          blockType: isParty ? 'party' : 'external_booking',
           reason: source,
           reference: reference.trim() || null,
           notes: notes.trim() || null,
@@ -227,7 +267,7 @@ export default function AddExternalBookingScreen() {
           pitchId: params.pitchId,
           startTime,
           endTime,
-          blockType: 'external_booking',
+          blockType: isParty ? 'party' : 'external_booking',
           reason: source,
           reference: reference.trim() || null,
           notes: notes.trim() || null,
@@ -274,19 +314,53 @@ export default function AddExternalBookingScreen() {
         {day.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}
       </Text>
 
-      <Text style={styles.sectionLabel}>{t('addExternalBooking.lengthStep')}</Text>
-      <DurationPicker
-        value={durationMinutes}
-        onChange={setDurationMinutes}
-        allDay={allDay}
-        onAllDayChange={setAllDay}
-      />
+      {isParty ? (
+        <>
+          <Text style={styles.sectionLabel}>{t('addExternalBooking.partyTimeStep')}</Text>
 
-      <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>
-        {allDay ? t('addExternalBooking.wholeDayStep') : t('addExternalBooking.startTimeStep')}
-      </Text>
+          <View style={styles.partyRow}>
+            <AnimatedPressable
+              style={styles.partyField}
+              onPress={() => setOpenPicker('start')}
+            >
+              <Text style={styles.partyFieldLabel}>{t('addExternalBooking.partyFrom')}</Text>
+              <Text style={styles.partyFieldValue}>{minutesToLabel(partyStart)}</Text>
+            </AnimatedPressable>
 
-      {isLoading ? (
+            <AnimatedPressable
+              style={styles.partyField}
+              onPress={() => setOpenPicker('end')}
+            >
+              <Text style={styles.partyFieldLabel}>{t('addExternalBooking.partyTo')}</Text>
+              <Text style={styles.partyFieldValue}>{minutesToLabel(partyEnd)}</Text>
+            </AnimatedPressable>
+          </View>
+
+          <Text style={styles.helperText}>
+            {t('addExternalBooking.partyHint', {
+              hours: ((partyEnd - partyStart) / 60).toFixed(1),
+            })}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text style={styles.sectionLabel}>{t('addExternalBooking.lengthStep')}</Text>
+          <DurationPicker
+            value={durationMinutes}
+            onChange={setDurationMinutes}
+            allDay={allDay}
+            onAllDayChange={setAllDay}
+          />
+
+          <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>
+            {allDay
+              ? t('addExternalBooking.wholeDayStep')
+              : t('addExternalBooking.startTimeStep')}
+          </Text>
+        </>
+      )}
+
+      {isParty ? null : isLoading ? (
         <Text style={styles.helperText}>{t('addExternalBooking.loadingAvailability')}</Text>
       ) : allDay ? (
         <View style={styles.allDayCard}>
@@ -418,6 +492,22 @@ export default function AddExternalBookingScreen() {
         actions={[{ label: t('common.ok'), onPress: () => router.back() }]}
         onDismiss={() => setSkippedNotice(null)}
       />
+      <OptionsModal
+        visible={openPicker !== null}
+        title={
+          openPicker === 'end'
+            ? t('addExternalBooking.partyTo')
+            : t('addExternalBooking.partyFrom')
+        }
+        options={quarterHourOptions}
+        value={String(openPicker === 'end' ? partyEnd : partyStart)}
+        onSelect={(value) => {
+          const minutes = Number(value);
+          if (openPicker === 'end') setPartyEnd(minutes);
+          else setPartyStart(minutes);
+        }}
+        onClose={() => setOpenPicker(null)}
+      />
     </Screen>
   );
 }
@@ -461,6 +551,31 @@ const makeStyles = (colors: AppColors) =>
       fontSize: scaleFont(13),
       fontWeight: '600',
       lineHeight: scaleLine(19),
+    },
+    partyRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    partyField: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+    },
+    partyFieldLabel: {
+      color: colors.grey,
+      fontSize: scaleFont(11),
+      fontWeight: '800',
+    },
+    partyFieldValue: {
+      color: colors.white,
+      fontSize: scaleFont(18),
+      fontWeight: '900',
+      marginTop: 2,
     },
     allDayCard: {
       flexDirection: 'row',
