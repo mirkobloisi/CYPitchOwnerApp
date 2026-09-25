@@ -20,7 +20,7 @@ import AppHeader from '../../components/AppHeader';
 import CalendarModal from '../../components/CalendarModal';
 import OptionsModal, { PickerOption } from '../../components/OptionsModal';
 import MemberGrid, { GridMember } from '../../components/MemberGrid';
-import PlaceSearchModal from '../../components/PlaceSearchModal';
+import MapPickerModal from '../../components/MapPickerModal';
 import Screen from '../../components/Screen';
 import { useTranslation } from '../../i18n/LanguageContext';
 import {
@@ -49,6 +49,7 @@ import {
   deleteSession,
   fetchAcademyCounts,
   fetchEnrolments,
+  fetchOtherAcademies,
   fetchMyAcademies,
   fetchMyPitches,
   fetchSessions,
@@ -101,6 +102,10 @@ export default function AcademyScreen() {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [sessionPitchId, setSessionPitchId] = useState<string | null>(null);
   const [sessionOpponent, setSessionOpponent] = useState('');
+  /** Empty means "work it out from the length", which is the usual case. */
+  const [sessionEndTime, setSessionEndTime] = useState('');
+  const [opponentAcademyId, setOpponentAcademyId] = useState<string | null>(null);
+  const [otherAcademies, setOtherAcademies] = useState<AcademyRow[]>([]);
   const [repeatWeekly, setRepeatWeekly] = useState(false);
   const [repeatForever, setRepeatForever] = useState(true);
   const [repeatUntil, setRepeatUntil] = useState('');
@@ -112,7 +117,9 @@ export default function AcademyScreen() {
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string | null>>({});
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
 
-  const [picker, setPicker] = useState<'date' | 'time' | 'duration' | 'pitch' | 'until' | null>(
+  const [picker, setPicker] = useState<
+    'date' | 'time' | 'duration' | 'pitch' | 'until' | 'endTime' | 'opponent' | null
+  >(
     null
   );
 
@@ -145,7 +152,10 @@ export default function AcademyScreen() {
 
   const loadConversations = useCallback(async () => {
     if (selectedId) setStaffId(await ensureStaffMember(selectedId));
-    setConversations(collapseToOnePerConversation(await fetchConversations()));
+    // A group nobody has written in is not yet a conversation, so it stays
+    // out of the list until somebody says something.
+    const rows = collapseToOnePerConversation(await fetchConversations());
+    setConversations(rows.filter((row) => row.kind === 'direct' || row.message_count > 0));
   }, [selectedId]);
 
   useEffect(() => {
@@ -183,6 +193,10 @@ export default function AcademyScreen() {
     if (pitchOwner?.id) fetchMyPitches(pitchOwner.id).then(setPitches);
   }, [pitchOwner?.id]);
 
+  useEffect(() => {
+    if (selectedId) fetchOtherAcademies(selectedId).then(setOtherAcademies);
+  }, [selectedId]);
+
   const selectedPitch = pitches.find((pitch) => pitch.id === sessionPitchId) ?? null;
 
   /** Set when the venue came from the map rather than the owner's own list. */
@@ -201,6 +215,8 @@ export default function AcademyScreen() {
     setSessionPitchId(null);
     setAwayPlace(null);
     setSessionOpponent('');
+    setSessionEndTime('');
+    setOpponentAcademyId(null);
     setRepeatWeekly(false);
     setRepeatForever(true);
     setRepeatUntil('');
@@ -213,7 +229,7 @@ export default function AcademyScreen() {
     const end = new Date(session.ends_at);
 
     setEditingSessionId(session.id);
-    setSessionTitle(session.title);
+    setSessionTitle(session.title ?? '');
     setSessionDate(
       `${start.getFullYear()}-${`${start.getMonth() + 1}`.padStart(2, '0')}-${`${start.getDate()}`.padStart(2, '0')}`
     );
@@ -228,6 +244,10 @@ export default function AcademyScreen() {
         : null
     );
     setSessionOpponent(session.opponent ?? '');
+    setOpponentAcademyId(session.opponent_academy_id);
+    setSessionEndTime(
+      `${`${end.getHours()}`.padStart(2, '0')}:${`${end.getMinutes()}`.padStart(2, '0')}`
+    );
     setRepeatWeekly(session.recurrence === 'weekly');
     setRepeatForever(session.recurrence === 'weekly' && !session.recurrence_until);
     setRepeatUntil(session.recurrence_until ?? '');
@@ -249,7 +269,17 @@ export default function AcademyScreen() {
       return;
     }
 
-    const endsAt = new Date(startsAt.getTime() + sessionDuration * 60000);
+    let endsAt = new Date(startsAt.getTime() + sessionDuration * 60000);
+
+    if (sessionEndTime) {
+      const [endHour, endMinute] = sessionEndTime.split(':').map(Number);
+      const explicit = new Date(startsAt);
+      explicit.setHours(endHour, endMinute, 0, 0);
+
+      // An end before the start means it runs past midnight.
+      if (explicit <= startsAt) explicit.setDate(explicit.getDate() + 1);
+      endsAt = explicit;
+    }
 
     setIsCreating(true);
     setErrorMessage('');
@@ -264,7 +294,9 @@ export default function AcademyScreen() {
       // coordinates. Both reach parents and children the same way.
       locationName: venueName,
       mapsUrl: venueMapsUrl,
-      opponent: sessionKind === 'match' ? sessionOpponent : null,
+      // One or the other: an academy on MYPitch, or a name typed by hand.
+      opponent: sessionKind === 'match' && !opponentAcademyId ? sessionOpponent : null,
+      opponentAcademyId: sessionKind === 'match' ? opponentAcademyId : null,
       recurrence: (repeatWeekly ? 'weekly' : 'none') as 'weekly' | 'none',
       recurrenceUntil: repeatWeekly && !repeatForever ? repeatUntil : null,
     };
@@ -301,6 +333,18 @@ export default function AcademyScreen() {
         label: t('academy.durationValue').replace('{minutes}', String(minutes)),
       })),
     [t]
+  );
+
+  const opponentOptions: PickerOption[] = useMemo(
+    () => [
+      { value: '', label: t('academy.opponentByName'), hint: null },
+      ...otherAcademies.map((row) => ({
+        value: row.id,
+        label: row.name,
+        hint: row.city ?? null,
+      })),
+    ],
+    [otherAcademies, t]
   );
 
   const pitchOptions: PickerOption[] = useMemo(
@@ -743,23 +787,57 @@ export default function AcademyScreen() {
                       />
                     </View>
 
-                    <PickerField
-                      styles={styles}
-                      colors={colors}
-                      icon="hourglass-outline"
-                      label={t('academy.durationLabel')}
-                      value={t('academy.durationValue').replace('{minutes}', String(sessionDuration))}
-                      onPress={() => setPicker('duration')}
-                    />
+                    <View style={styles.inputRow}>
+                      <PickerField
+                        styles={styles}
+                        colors={colors}
+                        icon="hourglass-outline"
+                        label={t('academy.durationLabel')}
+                        value={t('academy.durationValue').replace(
+                          '{minutes}',
+                          String(sessionDuration)
+                        )}
+                        style={styles.inputHalf}
+                        onPress={() => setPicker('duration')}
+                      />
+
+                      {/* Optional: given one, it wins over the length. */}
+                      <PickerField
+                        styles={styles}
+                        colors={colors}
+                        icon="time-outline"
+                        label={t('academy.endTimeLabel')}
+                        value={sessionEndTime}
+                        style={styles.inputHalf}
+                        onPress={() => setPicker('endTime')}
+                      />
+                    </View>
 
                     {sessionKind === 'match' ? (
-                      <TextInput
-                        style={styles.input}
-                        value={sessionOpponent}
-                        onChangeText={setSessionOpponent}
-                        placeholder={t('academy.opponentPlaceholder')}
-                        placeholderTextColor={colors.greyDark}
-                      />
+                      <>
+                        {/* An academy on MYPitch, or a name typed by hand. */}
+                        <PickerField
+                          styles={styles}
+                          colors={colors}
+                          icon="shield-outline"
+                          label={t('academy.opponentAcademyLabel')}
+                          value={
+                            otherAcademies.find((row) => row.id === opponentAcademyId)?.name ??
+                            ''
+                          }
+                          onPress={() => setPicker('opponent')}
+                        />
+
+                        {!opponentAcademyId ? (
+                          <TextInput
+                            style={styles.input}
+                            value={sessionOpponent}
+                            onChangeText={setSessionOpponent}
+                            placeholder={t('academy.opponentPlaceholder')}
+                            placeholderTextColor={colors.greyDark}
+                          />
+                        ) : null}
+                      </>
                     ) : null}
 
                     <PickerField
@@ -851,7 +929,7 @@ export default function AcademyScreen() {
                           editingSessionId ? t('common.save') : t('academy.scheduleAction')
                         }
                         loading={isCreating}
-                        disabled={!sessionTitle.trim() || !sessionDate || !sessionTime}
+                        disabled={!sessionDate || !sessionTime}
                         fullWidth={false}
                         style={styles.formButton}
                         onPress={handleCreateSession}
@@ -1062,7 +1140,30 @@ export default function AcademyScreen() {
         onClose={() => setPicker(null)}
       />
 
-      <PlaceSearchModal
+      <OptionsModal
+        visible={picker === 'endTime'}
+        title={t('academy.endTimeLabel')}
+        options={timeOptions}
+        value={sessionEndTime}
+        onSelect={setSessionEndTime}
+        onClose={() => setPicker(null)}
+      />
+
+      <OptionsModal
+        visible={picker === 'opponent'}
+        title={t('academy.opponentAcademyLabel')}
+        options={opponentOptions}
+        value={opponentAcademyId}
+        emptyText={t('academy.noOtherAcademies')}
+        onSelect={(value) => {
+          // The first option is "type a name instead", which carries no id.
+          setOpponentAcademyId(value || null);
+          if (value) setSessionOpponent('');
+        }}
+        onClose={() => setPicker(null)}
+      />
+
+      <MapPickerModal
         visible={showPlaceSearch}
         onSelect={(place: Place) => {
           setAwayPlace({ name: place.name, mapsUrl: mapsUrlFor(place) });

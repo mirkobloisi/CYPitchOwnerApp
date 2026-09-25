@@ -76,3 +76,46 @@ export async function searchPlaces(query: string, limit = 8): Promise<Place[]> {
 export function mapsUrlFor(place: Place): string {
   return `https://www.google.com/maps/search/?api=1&query=${place.latitude},${place.longitude}`;
 }
+
+/**
+ * What is at a point on the map.
+ *
+ * The map hands back coordinates; a match card needs a name. Nominatim's
+ * reverse lookup supplies one, and if it cannot, the coordinates themselves
+ * are shown — the maps link works either way, since it is built from the
+ * point rather than the name.
+ */
+export async function describePoint(latitude: number, longitude: number): Promise<Place> {
+  const fallback: Place = {
+    name: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+    address: '',
+    latitude,
+    longitude,
+  };
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'MYPitch/1.0 (academy match locations)',
+        },
+      }
+    );
+
+    if (!response.ok) return fallback;
+
+    const row = (await response.json()) as { name?: string; display_name?: string };
+    const display = row.display_name ?? '';
+
+    return {
+      name: row.name?.trim() || display.split(',')[0]?.trim() || fallback.name,
+      address: display,
+      latitude,
+      longitude,
+    };
+  } catch {
+    return fallback;
+  }
+}

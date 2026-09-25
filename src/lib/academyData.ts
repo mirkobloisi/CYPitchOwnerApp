@@ -211,12 +211,13 @@ export type SessionRow = {
   id: string;
   academy_id: string;
   kind: SessionKind;
-  title: string;
+  title: string | null;
   starts_at: string;
   ends_at: string;
   location_name: string | null;
   maps_url: string | null;
   opponent: string | null;
+  opponent_academy_id: string | null;
   notes: string | null;
   is_cancelled: boolean;
   recurrence: 'none' | 'weekly';
@@ -227,7 +228,7 @@ export type SessionRow = {
 };
 
 const SESSION_COLUMNS =
-  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, notes, is_cancelled, recurrence, recurrence_until, pitch_id';
+  'id, academy_id, kind, title, starts_at, ends_at, location_name, maps_url, opponent, opponent_academy_id, notes, is_cancelled, recurrence, recurrence_until, pitch_id';
 
 export async function fetchSessions(
   academyId: string,
@@ -250,13 +251,16 @@ export async function fetchSessions(
 export type SessionInput = {
   academyId: string;
   kind: SessionKind;
-  title: string;
+  /** Optional: a match is often just the fixture. */
+  title?: string | null;
   startsAt: string;
   endsAt: string;
   pitchId?: string | null;
   locationName?: string | null;
   mapsUrl?: string | null;
   opponent?: string | null;
+  /** Set when the opponent is another academy on MYPitch. */
+  opponentAcademyId?: string | null;
   notes?: string | null;
   recurrence?: 'none' | 'weekly';
   recurrenceUntil?: string | null;
@@ -266,7 +270,7 @@ export async function createSession(input: SessionInput) {
   return academy().rpc('create_session', {
     target_academy_id: input.academyId,
     session_kind: input.kind,
-    session_title: input.title.trim(),
+    session_title: input.title?.trim() || null,
     session_starts_at: input.startsAt,
     session_ends_at: input.endsAt,
     session_pitch_id: input.pitchId || null,
@@ -276,6 +280,7 @@ export async function createSession(input: SessionInput) {
     notes: input.notes?.trim() || null,
     recurrence: input.recurrence ?? 'none',
     recurrence_until: input.recurrenceUntil || null,
+    opponent_academy_id: input.opponentAcademyId || null,
   });
 }
 
@@ -283,13 +288,14 @@ export async function updateSession(sessionId: string, input: Omit<SessionInput,
   return academy()
     .from('sessions')
     .update({
-      title: input.title.trim(),
+      title: input.title?.trim() || null,
       starts_at: input.startsAt,
       ends_at: input.endsAt,
       pitch_id: input.pitchId || null,
       location_name: input.locationName?.trim() || null,
       maps_url: input.mapsUrl?.trim() || null,
       opponent: input.opponent?.trim() || null,
+      opponent_academy_id: input.opponentAcademyId || null,
       notes: input.notes?.trim() || null,
       recurrence: input.recurrence ?? 'none',
       recurrence_until: input.recurrenceUntil || null,
@@ -326,4 +332,11 @@ export function ageFromDateOfBirth(dateOfBirth: string | null): number | null {
   }
 
   return age;
+}
+
+/** Every other active academy on MYPitch, for choosing a match opponent. */
+export async function fetchOtherAcademies(exceptAcademyId: string): Promise<AcademyRow[]> {
+  const { data } = await academy().rpc('search_academies', { term: '' });
+
+  return ((data ?? []) as AcademyRow[]).filter((row) => row.id !== exceptAcademyId);
 }

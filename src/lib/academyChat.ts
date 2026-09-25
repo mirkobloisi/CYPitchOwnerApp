@@ -36,6 +36,8 @@ export type Conversation = {
   last_body: string | null;
   last_at: string | null;
   unread_count: number;
+  /** Total messages ever sent, so an unused group can be left out of a list. */
+  message_count: number;
 };
 
 export type ChatMessage = {

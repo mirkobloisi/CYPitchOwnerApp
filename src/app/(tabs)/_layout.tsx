@@ -5,12 +5,14 @@ import { Platform } from 'react-native';
 
 import WebTabsLayout from '../../components/WebTabsLayout';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useAcademyRealtime } from '../../lib/academyRealtime';
 import { useAppTheme } from '../../theme/ThemeContext';
 import { scaleFont } from '../../theme/typography';
 
 export default function TabsLayout() {
   const { colors } = useAppTheme();
   const { t } = useTranslation();
+  const { unread } = useAcademyRealtime();
 
   // In a browser the app uses a sidebar layout; phones and tablets keep the
   // platform tab bar untouched. Platform.OS never changes at runtime, so this
@@ -68,6 +70,9 @@ export default function TabsLayout() {
         name="academy"
         options={{
           title: t('nav.academy'),
+          // A badge on the tab the notice came from, so the owner is pointed
+          // at the thing that changed.
+          tabBarBadge: unread.players + unread.parents + unread.messages > 0 ? unread.players + unread.parents + unread.messages : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="school-outline" size={size} color={color} />
           ),
